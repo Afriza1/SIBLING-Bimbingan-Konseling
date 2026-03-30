@@ -9,9 +9,24 @@ class JobVacancy extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'position',
+        'company_name',
+        'description',
+        'location',
+        'salary',
+        'dateline_date',
+        'pamphlet',
+        'link',
+        'user_id',
+    ];
 
-    public function user(){
+    protected $casts = [
+        'dateline_date' => 'date',
+    ];
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }
