@@ -9,13 +9,23 @@ class Attendance extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'date',
+        'presence_status',
+        'description',
+        'user_id',
+        'student_id',
+        'evidence',
+    ];
 
-    public function student(){
+    public function student()
+    {
         return $this->belongsTo(Student::class);
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }
+
