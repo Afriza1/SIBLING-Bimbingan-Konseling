@@ -31,23 +31,31 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'nomor_induk' => ['required', 'string', 'max:255'],
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'nomor_induk' => ['required', 'string', 'max:255', 'unique:users'],
+            'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
+            'password'    => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'nomor_induk.unique' => 'NISN/NIP sudah terdaftar.',
+            'email.unique'       => 'Email sudah terdaftar.',
         ]);
 
         $user = User::create([
             'nomor_induk' => $request->nomor_induk,
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name'        => $request->name,
+            'email'       => $request->email ?? $request->nomor_induk . '@sibling.sch.id',
+            'password'    => Hash::make($request->password),
+            'account_status' => 'pending', //menunggu approval admin
         ]);
+
+        // Assign role sementara (tanpa role dulu)
+        // Admin yang akan assign role via halaman Autentifikasi User
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(RouteServiceProvider::HOME);
+        //arahkan ke halaman tunggu approval
+        return redirect()->route('pending');
     }
 }
