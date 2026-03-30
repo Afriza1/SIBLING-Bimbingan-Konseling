@@ -11,16 +11,19 @@ class Classes extends Model
 
     protected $guarded = ['id'];
 
-    public function major(){
+    public function major()
+    {
         return $this->belongsTo(Major::class);
     }
+
     public function students()
     {
-        return $this->hasMany(Student::class);
+        return $this->hasMany(Student::class, 'class_id');
     }
 
     public function getByName($className)
     {
+        // Format yang diharapkan: "XI TKR 1"
         if (!preg_match('/^(\S+)\s+(.+)\s+(\d+)$/', $className, $matches)) {
             throw new \InvalidArgumentException("❌ Format nama kelas tidak valid: '{$className}'");
         }
@@ -35,5 +38,10 @@ class Classes extends Model
             ->whereRaw('LOWER(TRIM(majors.major_name)) = ?', [strtolower($majorName)])
             ->where('classes.classroom', $classroom)
             ->first();
+    }
+
+    public function waliKelas()
+    {
+        return $this->belongsTo(User::class, 'wali_kelas_id');
     }
 }
