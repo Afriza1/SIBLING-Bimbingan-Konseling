@@ -1,18 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Http\Request;
 use App\Models\JobVacancy;
 use App\Models\User;
-use Faker\Provider\Base;
-use App\Imports\GuidanceImport;
-use Maatwebsite\Excel\Facades\Excel;
-
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Facades\DB;
-
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -21,7 +13,7 @@ class JobVacancyController extends Controller
     protected $UserModel;
     public function __construct()
     {
-        $this->middleware(['auth', 'verified'])->except(['landing']);
+        $this->middleware(['auth', 'verified'])->except(['landing', 'showImage', 'download']);
         $this->UserModel = new User();
     }
     public function index()
@@ -37,7 +29,7 @@ class JobVacancyController extends Controller
     {
         $latestJobVacancy = JobVacancy::latest()->first();
 
-        if ($latestJobVacancy && $latestJobVacancy->pamhplet) {
+        if ($latestJobVacancy && $latestJobVacancy->pamphlet) {
             return response()->json([
                 'pamphlet' => route('jobVacancy.showImage', $latestJobVacancy->id),
             ]);
@@ -58,54 +50,42 @@ class JobVacancyController extends Controller
     public function showImage($id)
     {
         $jobVacancy = JobVacancy::findOrFail($id);
-        if ($jobVacancy->pamphlet) {
-            return response($jobVacancy->pamphlet)
-                ->header('Content-Type', 'image/jpeg');
+
+        if (!$jobVacancy->pamphlet) {
+            abort(404, 'Pamflet tidak ditemukan');
         }
-        abort(404, 'Gambar tidak ditemukan.');
+
+        // Cek beberapa kemungkinan ekstensi
+        $basePath = storage_path('app/public/job_vacancies/');
+        $possibleExtensions = ['png', 'jpg', 'jpeg', 'pdf'];
+
+        foreach ($possibleExtensions as $ext) {
+            $filePath = $basePath . $jobVacancy->pamphlet . '.' . $ext;
+            if (file_exists($filePath)) {
+                return response()->file($filePath);
+            }
+        }
+
+        // Kalau tidak ada ekstensi, coba langsung
+        $filePath = $basePath . $jobVacancy->pamphlet;
+        if (file_exists($filePath)) {
+            return response()->file($filePath);
+        }
+
+        abort(404, 'File tidak ditemukan');
     }
+
     public function download($id)
     {
         $jobVacancy = JobVacancy::findOrFail($id);
-        if ($jobVacancy->pamphlet) {
-            $fileContent = $jobVacancy->pamphlet;
-            $extension = $this->getFileExtension($jobVacancy->pamphlet);
-            $fileName = "pamflet_{$jobVacancy->id}.{$extension}";
-            $contentType = $this->getContentTypeByExtension($extension);
-            return response($fileContent)
-                ->header('Content-Type', $contentType)
-                ->header('Content-Disposition', "attachment; filename={$fileName}");
+
+        $filePath = storage_path('app/public/job_vacancies/' . $jobVacancy->pamphlet);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan');
         }
-        return redirect()->back()->with('error', 'Pamflet tidak ditemukan.');
-    }
-    private function getFileExtension($blob)
-    {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_buffer($finfo, $blob);
-        finfo_close($finfo);
-        switch ($mimeType) {
-            case 'application/pdf':
-                return 'pdf';
-            case 'image/jpeg':
-                return 'jpg';
-            case 'image/png':
-                return 'png';
-            case 'image/gif':
-                return 'gif';
-            default:
-                return 'bin'; 
-        }
-    }
-    private function getContentTypeByExtension($extension)
-    {
-        $mimeTypes = [
-            'pdf' => 'application/pdf',
-            'jpg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'bin' => 'application/octet-stream', 
-        ];
-        return $mimeTypes[$extension] ?? 'application/octet-stream';
+
+        return response()->download($filePath);
     }
 
     public function store(Request $request)
@@ -129,68 +109,23 @@ class JobVacancyController extends Controller
         $jobVacancy->location = $request->input('location');
         $jobVacancy->salary = $request->input('salary');
         $jobVacancy->dateline_date = $request->input('dateline_date');
-        if ($request->hasFile('pamphlet')) {
-            $fileContent = file_get_contents($request->file('pamphlet')->getRealPath());
-            $jobVacancy->pamphlet = $fileContent; 
-        }
+
+            if ($request->hasFile('pamphlet')) {
+            $file = $request->file('pamphlet');
+
+            // PERBAIKAN: Simpan dengan ekstensi asli
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            $file->storeAs('job_vacancies', $filename, 'public');
+            $jobVacancy->pamphlet = $filename; // Sekarang tersimpan: "1234567890_brosur.png"
+            }
+
         $jobVacancy->link = $request->input('link');
         $jobVacancy->user_id = $request->input('user_id');
         $jobVacancy->save();
 
-        return redirect()->route('jobVacancy.index')->with('success', 'Jurusan berhasil ditambahkan!');
+        return redirect()->route('jobVacancy.index')->with('success', 'Lowongan berhasil ditambahkan!');
     }
-
-    public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls',
-    ]);
-
-    $file = $request->file('file');
-    $spreadsheet = IOFactory::load($file->getPathname());
-    $sheet = $spreadsheet->getActiveSheet();
-    $rows = $sheet->toArray();
-
-    for ($i = 1; $i < count($rows); $i++) {
-        if (
-            empty($rows[$i][0]) && empty($rows[$i][1]) && empty($rows[$i][2]) &&
-            empty($rows[$i][3]) && empty($rows[$i][4]) && empty($rows[$i][5]) &&
-            empty($rows[$i][6]) && empty($rows[$i][7]) && empty($rows[$i][8])
-        ) {
-            continue;
-        }
-
-        $position      = trim($rows[$i][0]);
-        $company_name  = trim($rows[$i][1]);
-        $description   = trim($rows[$i][2]);
-        $location      = trim($rows[$i][3]);
-        $salary        = trim($rows[$i][4]);
-        $dateline_date = trim($rows[$i][5]);
-        $pamphlet      = trim($rows[$i][6]);
-        $link          = trim($rows[$i][7]);
-        $user_name     = trim($rows[$i][8]);
-
-        $user = $this->UserModel->getByName($user_name);
-
-        if (!$user) {
-            return back()->with('error', "❌ User tidak ditemukan: $user_name (baris " . ($i + 1) . ")");
-        }
-
-        DB::table('job_vacancies')->insert([
-            'position'       => $position,
-            'company_name'   => $company_name,
-            'description'    => $description,
-            'location'       => $location,
-            'salary'         => $salary,
-            'dateline_date'  => $dateline_date,
-            'pamphlet'       => $pamphlet,
-            'link'           => $link,
-            'user_id'        => $user->id,
-        ]);
-    }
-
-    return back()->with('success', '✅ Data lowongan kerja berhasil diimpor!');
-}
 
 public function downloadFormat()
 {
@@ -232,94 +167,61 @@ public function downloadFormat()
     ]);
 }
 
-
-    public function export()
-    {
-        // Mengambil semua data dari model JobVacancy
-        $job_vacansies = JobVacancy::all();
-
-        // Buat file Excel
-        $excelData = [];
-        $excelData[] = ['ID', 'Posisi', 'Nama Perusahaan', 'Deskripsi', 'Lokasi', 'Gaji', 'Tanggal Deadline', 'Pamphlet (URL / Path)', 'Link Pendaftaran', 'Nama User']; // Judul kolom
-
-        foreach ($job_vacansies as $jobVacancy) {
-            $excelData[] = [
-                $jobVacancy->id,      // Jika Anda ingin menyertakan ID
-                $jobVacancy->position,
-                $jobVacancy->company_name,
-                $jobVacancy->description,
-                $jobVacancy->location,
-                $jobVacancy->salary,
-                $jobVacancy->dateline_date,
-                $jobVacancy->pamphlet,
-                $jobVacancy->link,
-                $jobVacancy->user->name,
-            ];
-        }
-
-        // Menggunakan PhpSpreadsheet untuk membuat file Excel
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Menyisipkan data ke dalam sheet
-        foreach ($excelData as $rowIndex => $row) {
-            foreach ($row as $colIndex => $cellValue) {
-                $sheet->setCellValueByColumnAndRow($colIndex + 1, $rowIndex + 1, $cellValue);
-            }
-        }
-
-        // Mengatur response untuk mengunduh file
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'loker.xlsx';
-
-        // Mengembalikan response download
-        return response()->stream(function() use ($writer) {
-            $writer->save('php://output');
-        }, 200, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
-    }
-
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'position' => 'required|string|max:255',
             'company_name' => 'required|string|max:255',
             'description' => 'required',
             'location' => 'required|string|max:255',
             'salary' => 'required|string|max:255',
             'dateline_date' => 'required|date',
-            'pamphlet' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
+            'pamphlet' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'link' => 'nullable|string|max:255',
-            'user_id' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         $jobVacancy = JobVacancy::findOrFail($id);
-        $jobVacancy->position = $request->input('position');
-        $jobVacancy->company_name = $request->input('company_name');
-        $jobVacancy->description = $request->input('description');
-        $jobVacancy->location = $request->input('location');
-        $jobVacancy->salary = $request->input('salary');
-        $jobVacancy->dateline_date = $request->input('dateline_date');
-        if ($request->hasFile('pamphlet')) {
-            $fileContent = file_get_contents($request->file('pamphlet')->getRealPath());
-            $jobVacancy->pamphlet = $fileContent; 
-        }
-        $jobVacancy->link = $request->input('link');
-        $jobVacancy->user_id = $request->input('user_id');
-        $jobVacancy->save();
 
-        return redirect()->route('jobVacancy.index')->with('success', 'Jurusan berhasil diubah!');
+        if ($request->hasFile('pamphlet')) {
+            // HAPUS FILE LAMA
+            if ($jobVacancy->pamphlet) {
+                $oldFilePath = storage_path('app/public/job_vacancies/' . $jobVacancy->pamphlet);
+                if (file_exists($oldFilePath)) {
+                    unlink($oldFilePath);  // Hapus file lama
+                }
+            }
+
+            // Upload file baru dengan timestamp (untuk cache busting)
+            $file = $request->file('pamphlet');
+            $filename = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->storeAs('job_vacancies', $filename, 'public');
+
+            $validated['pamphlet'] = $filename;
+        }
+
+        // Update data
+        $jobVacancy->update($validated);
+
+        return redirect()->route('jobVacancy.index')
+                        ->with('success', 'Lowongan berhasil diperbarui!');
     }
 
-    // Fungsi untuk menghapus jurusan
     public function destroy($id)
     {
         $jobVacancy = JobVacancy::findOrFail($id);
+
+        // Hapus file saat delete record
+        if ($jobVacancy->pamphlet) {
+            $filePath = storage_path('app/public/job_vacancies/' . $jobVacancy->pamphlet);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
         $jobVacancy->delete();
 
-        // Redirect atau menampilkan pesan sukses
-        return redirect()->route('jobVacancy.index')->with('success', 'Jurusan berhasil dihapus!');
+        return redirect()->route('jobVacancy.index')
+                        ->with('success', 'Lowongan berhasil dihapus!');
     }
 }
