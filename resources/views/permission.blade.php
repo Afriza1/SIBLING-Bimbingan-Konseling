@@ -44,22 +44,22 @@
                                             </td>
                                             <td>
                                                 @can('Ubah Perizinan')
-                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" 
+                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                                         data-bs-target="#editPermissionsModal{{ $role->id }}">
                                                     Edit Permissions
                                                 </button>
                                                 @endcan
-                                                
+
                                                 <!-- Edit Permissions Modal -->
-                                                <div class="modal fade" id="editPermissionsModal{{ $role->id }}" tabindex="-1" 
-                                                    aria-labelledby="editPermissionsModalLabel{{ $role->id }}" 
+                                                <div class="modal fade" id="editPermissionsModal{{ $role->id }}" tabindex="-1"
+                                                    aria-labelledby="editPermissionsModalLabel{{ $role->id }}"
                                                     aria-hidden="true">
                                                     <div class="modal-dialog">
                                                         <div class="modal-content">
                                                             <div class="modal-header">
                                                                 <h5 class="modal-title" id="editPermissionsModalLabel{{ $role->id }}">
                                                                     Edit Permissions untuk {{ $role->name }}</h5>
-                                                                <button type="button" class="btn-close" 
+                                                                <button type="button" class="btn-close"
                                                                         data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
                                                             <form action="{{ route('permission.update', $role->id) }}" method="POST">
@@ -68,16 +68,16 @@
                                                                 <div class="modal-body">
                                                                     @foreach ($permissions as $permission)
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input" type="checkbox" 
-                                                                                   name="permissions[]" 
-                                                                                   value="{{ $permission->id }}" 
+                                                                            <input class="form-check-input" type="checkbox"
+                                                                                   name="permissions[]"
+                                                                                   value="{{ $permission->id }}"
                                                                                    {{ $role->permissions->contains($permission) ? 'checked' : '' }}>
                                                                             <label class="form-check-label">{{ $permission->name }}</label>
                                                                         </div>
                                                                     @endforeach
                                                                 </div>
                                                                 <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" 
+                                                                    <button type="button" class="btn btn-secondary"
                                                                             data-bs-dismiss="modal">Tutup</button>
                                                                     <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                                                                 </div>
@@ -89,14 +89,14 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                                <tfoot>
+                                {{-- <tfoot>
                                     <tr>
                                         <th>No</th>
                                         <th>Nama Role</th>
                                         <th>Permissions</th>
                                         <th>Aksi</th>
                                     </tr>
-                                </tfoot>
+                                </tfoot> --}}
                             </table>
                         </div>
                     </div>
