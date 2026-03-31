@@ -6,98 +6,83 @@ use Illuminate\Http\Request;
 use App\Models\StudentAssessment;
 use App\Models\Student;
 use App\Models\Assessment;
-use App\Imports\GuidanceImport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\AssessmentLink;
+use Illuminate\Support\Facades\DB;
 
 class StudentAssessmentController extends Controller
 {
+    private function getRole()
+    {
+        $user = auth()->user();
+        return DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_id', $user->id)
+            ->where('model_has_roles.model_type', get_class($user))
+            ->value('roles.name');
+    }
+
     public function index()
     {
         return view('data_asesmen_siswa', [
             'student_assessments' => StudentAssessment::with(['student', 'assessment'])->get(),
-            'students' => Student::with(['class', 'status'])->get(),
-            'assessments' => Assessment::all(),
-            'active' => 'student_assessment'
+            'students'            => Student::with(['class', 'status'])->get(),
+            'assessments'         => Assessment::all(),
+            'links'               => AssessmentLink::with('user')->latest()->get(),
+            'role'                => $this->getRole(),
+            'active'              => 'student_assessment',
         ]);
     }
 
     public function create()
     {
-        return view('student_assessment.create', [
-            'active' => 'student_assessment'
-        ]);
+        return view('student_assessment.create', ['active' => 'student_assessment']);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'student_id' => 'required|string|max:255',
-            'answers' => 'required|array', // Pastikan ini adalah 'answers' untuk input
-            'answers.*' => 'in:0,1', // Validasi huruf kapital
+            'answers'    => 'required|array',
+            'answers.*'  => 'in:0,1',
         ]);
 
-        // Loop untuk menyimpan setiap jawaban
         foreach ($validated['answers'] as $assessment_id => $answer) {
-            $student_assessment = new StudentAssessment();
-            $student_assessment->student_id = $validated['student_id'];
-            $student_assessment->assessment_id = $assessment_id;
-            $student_assessment->answer = $answer; // Menggunakan huruf kapital sesuai enum
-            $student_assessment->save();
+            $sa = new StudentAssessment();
+            $sa->student_id    = $validated['student_id'];
+            $sa->assessment_id = $assessment_id;
+            $sa->answer        = $answer;
+            $sa->save();
         }
 
-        return redirect()->route('student_assessment.index')->with('success', 'Data Berhasil');
+        return redirect()->route('student_assessment.index')->with('success', 'Data berhasil disimpan!');
     }
-
-    // public function import(Request $request)
-    // {
-    //     $request->validate([
-    //         'file' => 'required|mimes:xlsx,xls,csv'
-    //     ]);
-
-    //     Excel::import(new StudentAssessmentImport, $request->file('file'));
-
-    //     return redirect()->route('student_assessment.index')->with('success', 'Data asesmen berhasil diimpor');
-    // }
 
     public function export()
     {
-        // Mengambil semua data dari model StudentAssessment
         $student_assessments = StudentAssessment::all();
 
-        // Buat file Excel
-        $excelData = [];
-        $excelData[] = ['ID', 'Nama Siswa', 'Pertanyaan', 'Jawaban']; 
-
-        foreach ($student_assessments as $student_assessment) {
+        $excelData = [['ID', 'Nama Siswa', 'Pertanyaan', 'Jawaban']];
+        foreach ($student_assessments as $sa) {
             $excelData[] = [
-                $student_assessment->id,      
-                $student_assessment->student->name,
-                $student_assessment->assessment->question,
-                $student_assessment->answer,
+                $sa->id,
+                $sa->student->name,
+                $sa->assessment->question,
+                $sa->answer,
             ];
         }
 
-        // Menggunakan PhpSpreadsheet untuk membuat file Excel
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
-        // Menyisipkan data ke dalam sheet
         foreach ($excelData as $rowIndex => $row) {
             foreach ($row as $colIndex => $cellValue) {
                 $sheet->setCellValueByColumnAndRow($colIndex + 1, $rowIndex + 1, $cellValue);
             }
         }
 
-        // Mengatur response untuk mengunduh file
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'export_asesmen_siswa.xlsx';
-
-        // Mengembalikan response download
-        return response()->stream(function() use ($writer) {
-            $writer->save('php://output');
-        }, 200, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        return response()->stream(fn() => $writer->save('php://output'), 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="export_asesmen_siswa.xlsx"',
         ]);
     }
 
@@ -105,22 +90,22 @@ class StudentAssessmentController extends Controller
     {
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'answers' => 'required|array',
+            'answers'    => 'required|array',
         ]);
 
         foreach ($validated['answers'] as $assessmentId => $answer) {
-            // Update atau simpan jawaban siswa
             StudentAssessment::updateOrCreate(
                 ['student_id' => $validated['student_id'], 'assessment_id' => $assessmentId],
                 ['answer' => $answer]
             );
         }
+
         return redirect()->route('student_assessment.index')->with('success', 'Jawaban berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         StudentAssessment::where('student_id', $id)->delete();
-        return redirect()->route('student_assessment.index')->with('success', 'Data Berhasil');
+        return redirect()->route('student_assessment.index')->with('success', 'Data berhasil dihapus!');
     }
 }
