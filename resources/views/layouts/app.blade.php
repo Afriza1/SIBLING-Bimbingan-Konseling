@@ -8,6 +8,9 @@
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
+  <!-- SweetAlert2 - Tambahkan ini -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <title>{{ config('app.name', 'SIBLING') }} | Bimbingan Konseling</title>
   <link rel="icon" type="image/png" href="/img/app_logo.png">
   <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
