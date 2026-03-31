@@ -104,23 +104,24 @@ $(document).ready(function () {
   }
   // Panggil fungsi untuk masing-masing input
   togglePassword("#passInput", "#iconShowHide", "#spanEye");
-  togglePassword("#password-confirm", "#iconShowHide2", "#spanEye2");
+togglePassword("#password-confirm", "#iconShowHide2", "#spanEye2");
 
-  /*========== GET CURRENT YEAR ==========*/
-  $("#year").text(new Date().getFullYear());
+/*========== GET CURRENT YEAR ==========*/
+$("#year").text(new Date().getFullYear());
 
-  /*========== NAVBAR ==========*/
+/*========== NAVBAR ==========*/
+// Hanya jalankan jika ada sticky element
+if ($("#sticky-element").length > 0) {
   $(window).scroll(function () {
     var stickyElement = $("#sticky-element");
     var customNavbar = $(".navbar-custom");
     var stickyPosition = stickyElement.offset().top;
 
     if (stickyPosition <= $(window).scrollTop()) {
-      // element has been pinned
       customNavbar.addClass("sticky-pinned");
     } else {
-      // element is not pinned
       customNavbar.removeClass("sticky-pinned");
     }
   });
+}
 });
