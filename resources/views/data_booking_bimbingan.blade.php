@@ -26,12 +26,12 @@
                             <!-- Field Nama -->
                             <div class="form-group">
                                 <label for="name" class="form-label">Nama</label>
-                                <input type="text" id="name" name="name" class="form-control" 
+                                <input type="text" id="name" name="name" class="form-control"
                                 required />
                             </div>
                             <div class="form-group mt-3">
                                 <label for="phone_number" class="form-label">Nomor WhatsApp</label>
-                                <input type="number" id="phone_number" name="phone_number" class="form-control" 
+                                <input type="number" id="phone_number" name="phone_number" class="form-control"
                                 required />
                             </div>
                             <div class="row">
@@ -49,7 +49,7 @@
                                     @php
                                         $timeSlots = ['09:00', '09:15', '11:30', '11:45'];
                                         $maxBookingPerSlot = 3; // Maksimal booking per slot
-                                        
+
                                         foreach ($timeSlots as $time) {
                                         $bookedCount = \App\Models\GuidanceBooking::where('booking_date', now()->format('Y-m-d') . " $time:00")->count();
                                         $remainingSlots = $maxBookingPerSlot - $bookedCount;
@@ -61,7 +61,7 @@
                                     @error('booking_time')
                                     <div  class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>    
+                                </div>
                                 </div>
                             </div>
                             <div class="form-group mt-3">
@@ -113,9 +113,9 @@
                                         <td>{{ $guidanceBooking->booking_date }}</td>
                                         <td>{{ $guidanceBooking->phone_number }}</td>
                                         <td>
-                                            <span class="badge 
-                                                {{ $guidanceBooking->status == 'pending' ? 'bg-warning text-dark' : '' }} 
-                                                {{ $guidanceBooking->status == 'confirmed' ? 'bg-success' : '' }} 
+                                            <span class="badge
+                                                {{ $guidanceBooking->status == 'pending' ? 'bg-warning text-dark' : '' }}
+                                                {{ $guidanceBooking->status == 'confirmed' ? 'bg-success' : '' }}
                                                 {{ $guidanceBooking->status == 'completed' ? 'bg-dark' : '' }}">
                                                 {{ $guidanceBooking->status == 'pending' ? 'Belum Dikonfirmasi' : ($guidanceBooking->status == 'confirmed' ? 'Terkonfirmasi' : 'Selesai') }}
                                             </span>
@@ -228,7 +228,7 @@
                                         </td>
                                     @endforeach
                                 </tbody>
-                                <tfoot>
+                                {{-- <tfoot>
                                     <tr>
                                     <th>No</th>
                                     <th>Nama Siswa</th>
@@ -237,7 +237,7 @@
                                     <th>Status</th>
                                     <th>Aksi</th>
                                     </tr>
-                                </tfoot>
+                                </tfoot> --}}
                                 </table>
                             </div>
                         </div>
