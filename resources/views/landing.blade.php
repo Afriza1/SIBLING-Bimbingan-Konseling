@@ -4,14 +4,59 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="icon" type="image/png" href="/img/app_logo.png">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
-
   <title>Bimbingan Konseling | SMKN 7 Negeri Jember</title>
-
   @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+  <style>
+    /* Sembunyikan label/caption carousel */
+    #schoolCarousel .carousel-indicators {
+      display: none;
+    }
+    /* Kecilkan tombol panah */
+    #schoolCarousel .carousel-control-prev,
+    #schoolCarousel .carousel-control-next {
+      width: 32px;
+      height: 32px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.7;
+    }
+    #schoolCarousel .carousel-control-prev { left: 8px; }
+    #schoolCarousel .carousel-control-next { right: 8px; }
+    #schoolCarousel .carousel-control-prev-icon,
+    #schoolCarousel .carousel-control-next-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .school-slide {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    }
+    .school-slide img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+    }
+    .school-slide-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 8px;
+    }
+    .school-slide-placeholder i { font-size: 52px; opacity: 0.8; }
+    .school-slide-placeholder span { font-size: 15px; font-weight: 600; }
+    .school-slide-placeholder small { font-size: 12px; opacity: 0.7; }
+  </style>
 </head>
 
 <body>
@@ -23,79 +68,69 @@
           <i class="uil uil-bars nav__toggler__icon"></i>
         </button>
         <a class="navbar-brand d-flex align-items-center" href="#">
-          <img src="img/app_logo.png" width="48" alt="Sibling" srcset="" />
-          <div class="ms-2 d-flex flex-column ">
+          <img src="img/app_logo.png" width="48" alt="Sibling" />
+          <div class="ms-2 d-flex flex-column">
             <h3>SIBLING</h3>
             <span>Bimbingan Konseling</span>
           </div>
         </a>
         <div class="offcanvas offcanvas-start offcanvas__container" data-bs-scroll="true" id="navbarNav">
           <div class="offcanvas-header offcanvas__header">
-            <img src="img/app_logo.png" width="48" alt="Sibling" srcset="" />
-
+            <img src="img/app_logo.png" width="48" alt="Sibling" />
             <div class="nav__btns">
               <i class="uil uil-moon change-theme me-1" id="theme-button"></i>
               <i class="uil uil-times nav__close" data-bs-dismiss="offcanvas" aria-label="Close"></i>
-              <!-- <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button> -->
             </div>
           </div>
           <div class="offcanvas-body offcanvas__body nav__menu">
             <ul class="navbar-nav ms-auto mb-lg-0">
               <li class="nav-item me-3 align-self-md-center">
                 <a class="nav-link nav__link active" aria-current="page" href="#home">
-                  <i class="uil uil-estate d-md-none me-2 nav__icon"></i>
-                  Home
+                  <i class="uil uil-estate d-md-none me-2 nav__icon"></i>Home
                 </a>
               </li>
               <li class="nav-item me-3 align-self-md-center">
                 <a class="nav-link nav__link" href="#news">
-                  <i class="uil uil-atom d-md-none me-2 nav__icon"></i>
-                  Berita
+                  <i class="uil uil-atom d-md-none me-2 nav__icon"></i>Berita
                 </a>
               </li>
               <li class="nav-item me-3 align-self-md-center">
                 <a class="nav-link nav__link" href="#about">
-                  <i class="uil uil-pricetag-alt d-md-none me-2 nav__icon"></i>
-                  Tentang
+                  <i class="uil uil-pricetag-alt d-md-none me-2 nav__icon"></i>Tentang
                 </a>
               </li>
               <li class="nav-item me-3 align-self-md-center">
                 <a class="nav-link nav__link" href="#contact">
-                  <i class="uil uil-message d-md-none me-2 nav__icon"></i>
-                  Hubungi Kami
+                  <i class="uil uil-message d-md-none me-2 nav__icon"></i>Hubungi Kami
                 </a>
               </li>
             </ul>
-            {{-- <div class="align-self-md-center me-3 nav__theme">
-              <i class="uil uil-moon change-theme" id="theme-button"></i>
-            </div> --}}
-            {{-- <a href="{{ route('login') }}" class="btn btn-primary navbar__btn align-self-center pt-1">Login</a> --}}
             @guest
-                <a href="{{ route('login') }}" class="btn btn-primary navbar__btn align-self-center pt-1">Login</a>
+              <a href="{{ route('login') }}" class="btn btn-primary navbar__btn align-self-center pt-1">Login</a>
             @else
-                <li class="nav-item dropdown frameProfile list-unstyled">
-                    <a class="nav-link dropdown-toggle nav-user" href="/#" id="navbarDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="account-user-avatar d-inline-block">
-                            @if (auth()->user()->photo)
-                                <img src="{{ route('user.showImage', auth()->user()->id) }}" alt="profileImg" class="cust-avatar img-fluid rounded-circle"/>
-                            @else
-                                <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=random" class="cust-avatar img-fluid rounded-circle" style="width: 48px; height: 48px; object-fit: cover;"/>
-                            @endif
-                        </span>
-                        <span class="account-user-name" id="profileName">{{ auth()->user()->name }}</span>
+              <li class="nav-item dropdown frameProfile list-unstyled">
+                <a class="nav-link dropdown-toggle nav-user" href="/#" id="navbarDropdown" role="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  <span class="account-user-avatar d-inline-block">
+                    @if(auth()->user()->photo)
+                      <img src="{{ route('user.showImage', auth()->user()->id) }}" alt="profileImg" class="cust-avatar img-fluid rounded-circle"/>
+                    @else
+                      <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=random" class="cust-avatar img-fluid rounded-circle" style="width:48px;height:48px;object-fit:cover;"/>
+                    @endif
+                  </span>
+                  <span class="account-user-name" id="profileName">{{ auth()->user()->name }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end me-1 border border-0 custom-rounded" aria-labelledby="navbarDropdown">
+                  <li>
+                    <a class="text-decoration-none" href="/home">
+                      <div class="dropdown-item custom-item-dropdown d-flex align-items-center">
+                        <i class="uil uil-estate me-2"></i>
+                        <span class="nameItem">Home</span>
+                      </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end me-1 border border-0 custom-rounded" aria-labelledby="navbarDropdown">
-                        <li>
-                            <a class="text-decoration-none" href="/home">
-                                <div class="dropdown-item custom-item-dropdown d-flex align-items-center">
-                                    <i class="uil uil-estate me-2"></i>
-                                    <span class="nameItem">Home</span>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                  </li>
+                </ul>
+              </li>
             @endguest
           </div>
         </div>
@@ -106,31 +141,30 @@
   <main>
     <!--==================== HOME ====================-->
     <section class="home" id="home">
-      <div class="container">
-        <span class="custom-badge">Karir</span>
+    <div class="container">
+        <span class="custom-badge">🎓 BK SMKN 7 Jember</span>
         <div class="row">
-          <div class="col-lg-6">
-            <h1 class="home__title mb-4 position-relative">Program Pengembangan Karir Lulusan SMK Negeri 7 Jember</h1>
-            <p class="home__description mb-5 pe-4 position-relative">Saat ini, kami membuka peluang bagi generasi muda, terutama lulusan baru, untuk bergabung dan mengembangkan keterampilan di dunia kerja.</span></p>
+        <div class="col-lg-6">
+            <h1 class="home__title mb-4 position-relative">Siap Kerja, Siap Sukses —<br>Kami Hadir untuk Kamu</h1>
+            <p class="home__description mb-5 pe-4 position-relative">Temukan lowongan kerja terpercaya, konsultasikan karirmu,
+            dan raih masa depan lebih cerah bersama Bimbingan Konseling SMKN 7 Jember.</p>
             <div class="d-flex nav__btns position-relative">
-              <button class="btn button me-3" type="button" onclick="location.href='#news'" role="link">Daftar Sekarang !</button>
-              <button class="btn button-alt" type="button" onclick="location.href='#news'" role="link">Detail</button>
+            <button class="btn button me-3" type="button" onclick="location.href='#news'">Lihat Lowongan</button>
+            <button class="btn button-alt" type="button" onclick="location.href='#contact'">Hubungi BK</button>
             </div>
-          </div>
-          <div class="col-lg-6 position-relative d-lg-inline-block d-none">
-            <img src="img/ornamen1.svg" class="ornamen1" alt="..." />
+        </div>
+
+        {{-- GAMBAR STATIS --}}
+        <div class="col-lg-6 position-relative d-lg-inline-block d-none">
+            <img src="img/ornamen1.svg" class="ornamen1" alt="" />
             <div class="ornamen mt-4 d-flex justify-content-center">
-              <span data-badge="Terbaru"></span>
-              <img src="{{ route('jobVacancy.showImage', $latestJobVacancy->id) }}" alt="Pamflet Terbaru" class="img-fluid rounded">
+            <img src="{{ asset('img/SMKN7Jember.jpeg') }}"
+                style="width:100%;height:450px;object-fit:cover;border-radius:16px;display:block;">
             </div>
-          </div>
         </div>
-        <div class="datetime">
-          <i class="uil uil-clock"></i>
-          <span><strong>Dateline : </strong>{{ \Carbon\Carbon::parse($latestJobVacancy->dateline_date)->locale('id')->isoFormat('D MMMM YYYY') }}</span>
         </div>
-        <img src="img/wavy-lines.svg" class="wavy-lines" alt="..." />
-      </div>
+        <img src="img/wavy-lines.svg" class="wavy-lines" alt="" />
+    </div>
     </section>
 
     <!--==================== NEWS ====================-->
@@ -138,48 +172,72 @@
       <div class="container">
         <h2 class="section__title">Informasi Lowongan Pekerjaan</h2>
         <p class="section__subtitle">Berita terbaru seputar dunia kerja dan karir</p>
-
         <div class="row mb-5">
           @foreach ($job_vacancies as $job_vacancy)
-          <div class="col-lg-4">
-            <div class="card">
-              <img src="{{ route('jobVacancy.showImage', $job_vacancy->id) }}" alt="Brosur" class="card-img-top">
+          <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+              @if($job_vacancy->pamphlet)
+                @php $ext = strtolower(pathinfo($job_vacancy->pamphlet, PATHINFO_EXTENSION)); @endphp
+                @if($ext === 'pdf')
+                  <div style="height:250px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;">
+                    <i class="uil uil-file-pdf-alt" style="font-size:80px;color:#dc3545;"></i>
+                  </div>
+                @else
+                  <img src="{{ asset('storage/job_vacancies/' . $job_vacancy->pamphlet) }}"
+                    alt="Brosur {{ $job_vacancy->position }}"
+                    class="card-img-top"
+                    style="height:250px;object-fit:cover;">
+                @endif
+              @else
+                <div style="height:250px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">
+                  <i class="uil uil-image-slash" style="font-size:48px;color:#94a3b8;"></i>
+                </div>
+              @endif
               <div class="card-body">
                 <h5 class="card-title">{{ $job_vacancy->position }}</h5>
-                <p class="card-text">{{ $job_vacancy->description }}</p>
-                <a href="#" class="btn button" data-bs-toggle="modal" data-bs-target="#detailModal-{{ $job_vacancy->id }}">Detail</a>
+                <p class="card-text text-muted small">{{ $job_vacancy->company_name }}</p>
+                <p class="card-text">{{ Str::limit($job_vacancy->description, 100) }}</p>
+                <button class="btn button" data-bs-toggle="modal" data-bs-target="#detailModal-{{ $job_vacancy->id }}">Detail</button>
               </div>
             </div>
           </div>
-          <!-- Modal untuk setiap pekerjaan -->
-          <div class="modal fade" id="detailModal-{{ $job_vacancy->id }}" tabindex="-1" aria-labelledby="detailModalLabel-{{ $job_vacancy->id }}" aria-hidden="true">
+
+          {{-- Modal Detail --}}
+          <div class="modal fade" id="detailModal-{{ $job_vacancy->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="detailModalLabel-{{ $job_vacancy->id }}">{{ $job_vacancy->position }}</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <h5 class="modal-title">{{ $job_vacancy->position }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body d-flex">
-                  <div class="modal-text" style="flex: 1;">
-                    <h4>Posisi: {{ $job_vacancy->position }}</h4>
+                <div class="modal-body d-flex flex-wrap gap-3">
+                  <div style="flex:1;min-width:200px;">
+                    <p><strong>Posisi:</strong> {{ $job_vacancy->position }}</p>
                     <p><strong>Nama Perusahaan:</strong> {{ $job_vacancy->company_name }}</p>
                     <p><strong>Tempat:</strong> {{ $job_vacancy->location }}</p>
                     <p><strong>Gaji:</strong> {{ $job_vacancy->salary }}</p>
-                    <p><strong>Dateline:</strong> {{ $job_vacancy->dateline_date }}</p>
-                    <p><strong>Link:</strong> <a href="{{ $job_vacancy->link }}" target="_blank">{{ $job_vacancy->link }}</a></p>
+                    <p><strong>Dateline:</strong> {{ \Carbon\Carbon::parse($job_vacancy->dateline_date)->format('d M Y') }}</p>
+                    <p><strong>Link:</strong>
+                      @if($job_vacancy->link)
+                        <a href="{{ $job_vacancy->link }}" target="_blank">{{ $job_vacancy->link }}</a>
+                      @else
+                        -
+                      @endif
+                    </p>
                     <p><strong>Deskripsi:</strong> {{ $job_vacancy->description }}</p>
                   </div>
-                  
-                  <div class="modal-image" style="margin-left: 20px; max-width: 200px;">
-                    @if ($job_vacancy->pamphlet)
-                      <img src="{{ route('jobVacancy.showImage', $job_vacancy->id) }}" alt="Brosur" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                      <a href="{{ route('jobVacancy.download', $job_vacancy->id) }}" class="btn btn-primary btn-sm">
-                        <i class="uil uil-download-alt"></i> Unduh
+                  @if($job_vacancy->pamphlet)
+                    <div style="max-width:200px;flex-shrink:0;">
+                      @php $ext = strtolower(pathinfo($job_vacancy->pamphlet, PATHINFO_EXTENSION)); @endphp
+                      @if($ext !== 'pdf')
+                        <img src="{{ asset('storage/job_vacancies/' . $job_vacancy->pamphlet) }}"
+                          style="max-width:100%;height:auto;border-radius:8px;margin-bottom:8px;">
+                      @endif
+                      <a href="{{ route('jobVacancy.download', $job_vacancy->id) }}" class="btn btn-primary btn-sm d-block">
+                        <i class="uil uil-download-alt"></i> Unduh Brosur
                       </a>
-                    @else
-                      <p>Tidak ada pamflet</p>
-                    @endif
-                  </div>
+                    </div>
+                  @endif
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -189,16 +247,9 @@
           </div>
           @endforeach
         </div>
-
         <div class="d-flex justify-content-center">
-    {{ $job_vacancies->links('pagination::bootstrap-4') }}
-</div>
-
-
-        {{-- <div class="d-flex justify-content-center">
-          <button class="btn button" id="loadMoreBtn">Lihat Lebih Banyak</button>
-          <button class="btn button" id="showLessBtn" style="display: none;">Lihat Lebih Sedikit</button>
-        </div> --}}
+          {{ $job_vacancies->links('pagination::bootstrap-4') }}
+        </div>
       </div>
     </section>
 
@@ -210,22 +261,18 @@
         <div class="row">
           <div class="col-lg-6">
             <h3 class="about__title">Bimbingan Konseling SMKN 7 Negeri Jember</h3>
-            <p class="about__description">Bimbingan Konseling SMKN 7 Negeri Jember merupakan sebuah layanan sekolah
-              kepada siswa maupun guru untuk membantu mereka dalam mengatasi masalah pribadi, sosial, akademik, dan
-              karir. Layanan ini bertujuan untuk membantu siswa agar dapat mengembangkan potensi diri, mengatasi masalah
-              yang dihadapi, dan membuat keputusan yang tepat dalam kehidupan mereka. </p>
-
+            <p class="about__description">Bimbingan Konseling SMKN 7 Negeri Jember merupakan sebuah layanan sekolah kepada siswa maupun guru untuk membantu mereka dalam mengatasi masalah pribadi, sosial, akademik, dan karir. Layanan ini bertujuan untuk membantu siswa agar dapat mengembangkan potensi diri, mengatasi masalah yang dihadapi, dan membuat keputusan yang tepat dalam kehidupan mereka.</p>
           </div>
           <div class="col-lg-6">
             <h3 class="about__title text-center mb-5">Dukungan</h3>
             <div class="about__logos text-center">
               <img src="img/logo-smk-7.png" class="me-2" alt="Logo 1" width="90" />
-              {{-- <img src="img/SMKN-7-JEMBER-4.png" class="me-2" alt="Logo 2" width="120" /> --}}
               <img src="img/smkbisa.png" class="me-2" alt="Logo 3" width="140" />
               <img src="img/app_logo_extend.png" class="me-2" alt="Logo 4" width="140" />
             </div>
           </div>
         </div>
+      </div>
     </section>
 
     <!--==================== CONTACT ====================-->
@@ -233,42 +280,24 @@
       <div class="container">
         <h2 class="section__title text-center">Hubungi Kami</h2>
         <p class="section__subtitle text-center">Kami siap membantu Anda</p>
-
         <div class="row">
-          <!-- Informasi Kontak -->
-          <div class="col-lg-6 ">
+          <div class="col-lg-6">
             <div class="contact__info">
               <div class="contact__info__item d-flex mb-4">
                 <i class="uil uil-phone me-3 fs-4"></i>
-                <div>
-                  <h3>Telepon</h3>
-                  <span>031-8292038</span>
-                </div>
+                <div><h3>Telepon</h3><span>031-8292038</span></div>
               </div>
-
               <div class="contact__info__item d-flex mb-4">
                 <i class="uil uil-envelope me-3 fs-4"></i>
-                <div>
-                  <h3>Email</h3>
-                  <span><a href="mailto:info@smkn7jember.sch.id"
-                      class="contact__info__email">info@smkn7jember.sch.id</a></span>
-                </div>
+                <div><h3>Email</h3><span><a href="mailto:info@smkn7jember.sch.id" class="contact__info__email">info@smkn7jember.sch.id</a></span></div>
               </div>
-
               <div class="contact__info__item d-flex mb-4">
                 <i class="uil uil-map-marker me-3 fs-4"></i>
-                <div>
-                  <h3>Alamat</h3>
-                  <span>Jl. Randu Agung Jatiroto, Jam Koong, Jatiroto, Kec. Sumberbaru, Kabupaten Jember, Jawa Timur 68156</span>
-                </div>
+                <div><h3>Alamat</h3><span>Jl. Randu Agung Jatiroto, Jam Koong, Jatiroto, Kec. Sumberbaru, Kabupaten Jember, Jawa Timur 68156</span></div>
               </div>
-
               <div class="contact__info__item d-flex">
                 <i class="uil uil-clock me-3 fs-4"></i>
-                <div>
-                  <h3>Jam Kerja</h3>
-                  <span>Senin - Jumat: 07.00 - 15.00</span>
-                </div>
+                <div><h3>Jam Kerja</h3><span>Senin - Jumat: 07.00 - 15.00</span></div>
               </div>
             </div>
           </div>
@@ -276,31 +305,28 @@
             <form action="{{ route('submit.form') }}" method="POST" enctype="multipart/form-data">
               @csrf
               <div class="form-group">
-                <label for="name" class="form-label">Nama</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Masukkan nama anda"
-                  required />
+                <label class="form-label">Nama</label>
+                <input type="text" name="name" class="form-control" placeholder="Masukkan nama anda" required />
               </div>
               <div class="form-group mt-3">
-                <label for="phone_number" class="form-label">Nomor WhatsApp</label>
-                <input type="number" id="phone_number" name="phone_number" class="form-control" placeholder="Masukkan nomor WhatsApp anda"
-                  required />
+                <label class="form-label">Nomor WhatsApp</label>
+                <input type="number" name="phone_number" class="form-control" placeholder="Masukkan nomor WhatsApp anda" required />
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group mt-3">
-                    <label for="booking_date" class="form-label">Pilih Tanggal</label>
-                    <input type="date" id="booking_date" name="booking_date" class="form-control" required>
+                    <label class="form-label">Pilih Tanggal</label>
+                    <input type="date" name="booking_date" class="form-control" required>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group mt-3">
-                    <label for="booking_time" class="form-label">Pilih Waktu</label>
-                    <select id="booking_time" name="booking_time" class="form-control @error('booking_time') is-invalid @enderror" required>
-                      <option value="" selected disabled>Pilih Waktu</option>
+                    <label class="form-label">Pilih Waktu</label>
+                    <select name="booking_time" class="form-control @error('booking_time') is-invalid @enderror" required>
+                      <option value="" disabled selected>Pilih Waktu</option>
                       @php
                         $timeSlots = ['09:00', '09:15', '11:30', '11:45'];
-                        $maxBookingPerSlot = 3; // Maksimal booking per slot
-                        
+                        $maxBookingPerSlot = 3;
                         foreach ($timeSlots as $time) {
                           $bookedCount = \App\Models\GuidanceBooking::where('booking_date', now()->format('Y-m-d') . " $time:00")->count();
                           $remainingSlots = $maxBookingPerSlot - $bookedCount;
@@ -309,24 +335,17 @@
                         }
                       @endphp
                     </select>
-                    @error('booking_time')
-                      <div  class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                  </div>    
+                    @error('booking_time')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                  </div>
                 </div>
               </div>
-              <div class="form-group" hidden>
-                <label for="status" class="form-label">Status</label>
-                <input type="text" id="status" name="status" class="form-control" value="pending"
-                  required />
-              </div>
+              <input type="hidden" name="status" value="pending">
               <button type="submit" class="btn btn-primary mt-4">Kirim Pesan</button>
             </form>
           </div>
         </div>
       </div>
     </section>
-
   </main>
 
   <!--==================== Footer ====================-->
@@ -335,31 +354,12 @@
       <div class="row">
         <div class="col-lg-6">
           <img src="img/app_logo_extend_w.png" alt="" height="50" />
-          <p class="mt-4 pe-lg-5">Aplikasi Bimbingan Konseling Digital di SMKN 7 Jember adalah platform yang dirancang
-            untuk membantu siswa dalam mengatasi masalah pribadi, sosial, akademik, dan karir. Dengan aplikasi ini,
-            siswa dapat dengan mudah mengakses layanan bimbingan konseling secara online, membuat janji temu dengan
-            konselor, dan mendapatkan berbagai sumber daya yang berguna untuk pengembangan diri.</p>
+          <p class="mt-4 pe-lg-5">Aplikasi Bimbingan Konseling Digital di SMKN 7 Jember adalah platform yang dirancang untuk membantu siswa dalam mengatasi masalah pribadi, sosial, akademik, dan karir. Dengan aplikasi ini, siswa dapat dengan mudah mengakses layanan bimbingan konseling secara online, membuat janji temu dengan konselor, dan mendapatkan berbagai sumber daya yang berguna untuk pengembangan diri.</p>
           <ul class="social-list list-inline mt-3">
-            <li class="list-inline-item text-center">
-              <a href="#" class="social-list-item border-primary text-primary">
-                <i class="bx bxl-facebook"></i>
-              </a>
-            </li>
-            <li class="list-inline-item text-center">
-              <a href="#" class="social-list-item border-danger text-danger">
-                <i class="bx bxl-google"></i>
-              </a>
-            </li>
-            <li class="list-inline-item text-center">
-              <a href="#" class="social-list-item border-info text-info">
-                <i class="bx bxl-twitter"></i>
-              </a>
-            </li>
-            <li class="list-inline-item text-center">
-              <a href="#" class="social-list-item border-secondary text-secondary">
-                <i class="bx bxl-linkedin"></i>
-              </a>
-            </li>
+            <li class="list-inline-item text-center"><a href="#" class="social-list-item border-primary text-primary"><i class="bx bxl-facebook"></i></a></li>
+            <li class="list-inline-item text-center"><a href="#" class="social-list-item border-danger text-danger"><i class="bx bxl-google"></i></a></li>
+            <li class="list-inline-item text-center"><a href="#" class="social-list-item border-info text-info"><i class="bx bxl-twitter"></i></a></li>
+            <li class="list-inline-item text-center"><a href="#" class="social-list-item border-secondary text-secondary"><i class="bx bxl-linkedin"></i></a></li>
           </ul>
         </div>
         <div class="col-lg-auto mt-3 mt-lg-0 ms-auto">
@@ -383,9 +383,7 @@
       </div>
       <div class="row">
         <div class="col-lg-12">
-          <div class="mt-5">
-            <p class="mt-4 text-center mb-0">©2024 SIBLING | SMKN 7 Jember</p>
-          </div>
+          <p class="mt-5 text-center mb-0">©2024 SIBLING | SMKN 7 Jember</p>
         </div>
       </div>
     </div>
@@ -395,33 +393,23 @@
     <i class="uil uil-arrow-up scrollup__icon"></i>
   </a>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
-    integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
   <script src="js/main.js"></script>
   <script>
     $(document).ready(function() {
-      var badgeText = $('.ornamen span').data('badge'); // Ambil nilai dari data-badge
-      $('.ornamen span').css('--badge-content', `"${badgeText}"`); // Set nilai untuk digunakan di CSS
-    
+      // Fix jQuery error: cek target ada sebelum scroll
       $('a[href^="#"]').on('click', function(e) {
+        var href = $(this).attr('href');
+        if (!href || href === '#' || href.length <= 1) return;
         e.preventDefault();
-
-        var targetId = $(this).attr('href').substring(1);
-        var targetElement = $('#' + targetId);
-
+        var targetId = href.substring(1);
+        var targetElement = $('#' + CSS.escape(targetId));
         if (targetElement.length) {
-          // Menggulir ke elemen yang diinginkan
-          $('html, body').animate({
-            scrollTop: targetElement.offset().top
-          }, 100);
-
-          // Menggunakan history.pushState untuk menghilangkan hash dari URL
+          $('html, body').animate({ scrollTop: targetElement.offset().top }, 100);
           history.pushState(null, null, ' ');
         }
       });
     });
   </script>
 </body>
-
 </html>
