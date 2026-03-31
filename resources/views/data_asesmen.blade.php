@@ -193,14 +193,14 @@
                               </td>
                           @endforeach
                         </tbody>
-                        <tfoot>
+                        {{-- <tfoot>
                           <tr>
                             <th>No</th>
                             <th>Pertanyaan</th>
                             <th>Bidang</th>
                             <th>Aksi</th>
                           </tr>
-                        </tfoot>
+                        </tfoot> --}}
                       </table>
                     </div>
                   </div>
