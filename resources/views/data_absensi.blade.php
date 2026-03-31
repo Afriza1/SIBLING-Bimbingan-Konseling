@@ -1,469 +1,580 @@
 @extends('layouts.dashboard')
 @section('content')
 <style>
-    /* Styling untuk membuat elemen sejajar */
-    .form-inline {
-        display: flex;
-        flex-wrap: nowrap; /* Memastikan elemen tetap dalam satu baris */
-        gap: 15px; /* Jarak antar elemen */
-        align-items: center;
-    }
-
-    .form-inline .form-group {
-        flex: 1; /* Membuat elemen menyesuaikan lebar */
-        min-width: 200px; /* Lebar minimum dropdown */
-    }
+    .form-inline { display:flex; flex-wrap:nowrap; gap:15px; align-items:center; }
+    .hiddenRow { padding:0 !important; }
+    .expand-toggle { cursor:pointer; }
+    .expand-box { padding:12px; border-radius:6px; background-color:#f8f9fa; }
+    .status-cell { font-weight:600; }
+    .btn-save-sim { min-width:120px; }
+    .evidence-preview img { max-width:80px; max-height:80px; object-fit:cover; border-radius:4px; cursor:pointer; }
 </style>
-<div>
-    <div class="content">
-        <div class="row pt-4">
-            <div class="mb-4">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="m-0 text-primary">Tabel Absensi Siswa</h5>
-                        <div class="row filter-row">
-                            <form method="GET" action="{{ route('attendance.index') }}" class="form-inline">
-                                <div class="col-12 col-sm-6 col-md-3">
-                                    <select name="class" class="form-select">
-                                        <option value="">Pilih Kelas</option>
-                                        @foreach ($classes as $class)
-                                            <option value="{{ $class->id }}" {{ $selectedClass == $class->id ? 'selected' : '' }}>
-                                                {{ $class->class_level }} {{ $class->major->major_name }} {{ $class->classroom }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-6 col-sm-4 col-md-2">
-                                    <select name="month" class="form-select">
-                                        <option value="01" {{ $selectedMonth == '01' ? 'selected' : '' }}>Januari</option>
-                                        <option value="02" {{ $selectedMonth == '02' ? 'selected' : '' }}>Februari</option>
-                                        <option value="03" {{ $selectedMonth == '03' ? 'selected' : '' }}>Maret</option>
-                                        <option value="04" {{ $selectedMonth == '04' ? 'selected' : '' }}>April</option>
-                                        <option value="05" {{ $selectedMonth == '05' ? 'selected' : '' }}>Mei</option>
-                                        <option value="06" {{ $selectedMonth == '06' ? 'selected' : '' }}>Juni</option>
-                                        <option value="07" {{ $selectedMonth == '07' ? 'selected' : '' }}>Juli</option>
-                                        <option value="08" {{ $selectedMonth == '08' ? 'selected' : '' }}>Agustus</option>
-                                        <option value="09" {{ $selectedMonth == '09' ? 'selected' : '' }}>September</option>
-                                        <option value="10" {{ $selectedMonth == '10' ? 'selected' : '' }}>Oktober</option>
-                                        <option value="11" {{ $selectedMonth == '11' ? 'selected' : '' }}>November</option>
-                                        <option value="12" {{ $selectedMonth == '12' ? 'selected' : '' }}>Desember</option>
-                                    </select>
-                                </div>
-                                <div class="col-6 col-sm-4 col-md-2">
-                                    <select name="year" class="form-select">
-                                        @foreach ($years as $year)
-                                            <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="uil uil-search"></i>
-                                </button>
-                            </form>
-                        </div>
-                        @can('Tambah Absensi')
-                        {{-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">
-                            Tambah
-                        </button> --}}
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importAbsensiModal">
-                            Import
-                        </button>
-                        <a href="{{ route('attendance.export') }}" class="btn btn-success">
-                            Ekspor
-                        </a>
-                        @endcan
-                        <!-- Modal Tambah Data Absensi Bulanan -->
-                        <div class="modal fade" id="addAttendanceModal" tabindex="-1" aria-labelledby="addMonthlyAttendanceModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="addAttendanceModalLabel">Tambah Absensi Bulanan Siswa</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form method="POST" action="{{ route('attendance.store') }}">
-                                            @csrf
-                                            <div class="mb-3">
-                                                <label for="student_id" class="form-label">Pilih Siswa</label>
-                                                <select name="student_id" class="form-select" id="student_id" required>
-                                                    @foreach ($students as $student)
-                                                        <option value="{{ $student->id }}">{{ $student->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="month" class="form-label">Bulan</label>
-                                                <select name="month" class="form-select" id="month" required>
-                                                    @for ($i = 1; $i <= 12; $i++)
-                                                        <option value="{{ $i }}">{{ \Carbon\Carbon::create()->month($i)->format('F') }}</option>
-                                                    @endfor
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="year" class="form-label">Tahun</label>
-                                                <input type="number" name="year" class="form-control" id="year" required>
-                                            </div>
-                                            <label class="form-label">Status Kehadiran</label>
-                                            <div class="mb-3">
-                                                @foreach ($dates as $date)
-                                                    <div class="form-check">
-                                                        <label>{{ \Carbon\Carbon::parse($date['date'])->format('d') }}</label><br>
-                                                        <div class="d-flex">
-                                                            <div class="form-check me-3">
-                                                                <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Hadir" id="hadir_{{ $date['date'] }}">
-                                                                <label class="form-check-label" for="hadir_{{ $date['date'] }}">Hadir</label>
-                                                            </div>
-                                                            <div class="form-check me-3">
-                                                                <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Alpa" id="alpa_{{ $date['date'] }}">
-                                                                <label class="form-check-label" for="alpa_{{ $date['date'] }}">Alpa</label>
-                                                            </div>
-                                                            <div class="form-check me-3">
-                                                                <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Ijin" id="ijin_{{ $date['date'] }}">
-                                                                <label class="form-check-label" for="ijin_{{ $date['date'] }}">Ijin</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Sakit" id="sakit_{{ $date['date'] }}">
-                                                                <label class="form-check-label" for="sakit_{{ $date['date'] }}">Sakit</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                            <input type="hidden" name="user_id" value="{{ Auth::id() }}">
 
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                                <button type="submit" class="btn btn-primary">Tambah Data</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Import Modal -->
-                        <div class="modal fade" id="importAbsensiModal" tabindex="-1" aria-labelledby="importAbsensiModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                <h5 class="modal-title" id="importAbsensiModalLabel">Import Data Absensi</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                <form action="{{ route('attendance.import') }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
-                                    <div class="mb-3">
-                                    <label for="file" class="form-label">Pilih File Excel</label>
-                                    <input type="file" name="file" class="form-control" required>
-                                    </div>
-                                    <div class="mb-3">
-                                    <a href="{{ route('attendance.download_format') }}" class="btn btn-sm btn-success">
-                                        <i class="fas fa-download"></i> Download Format Excel
-                                    </a>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                <button type="submit" class="btn btn-primary">Import Data</button>
-                                </div>
-                                </form>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dt-container">
-                        <div class="row mt-2 justify-content-between">
-                            <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto"></div>
-                            <div class="d-md-flex justify-content-between align-items-center dt-layout-end col-md-auto ms-auto"></div>
-                        </div>
-                    </div>
-                    <div class="row ">
-                        <div class="col-lg-12">
-                            <div class="card border-0 shadowNavbar" id="panel">
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover" style="width:100%; --bs-table-bg: white;">
-                                            <thead class="text-nowrap table-light rounded-header"
-                                            style="--bs-table-bg: #eef2f7; --bs-table-border-color: #eef2f7;">
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>Nama Siswa</th>
-                                                    <th>L/P</th>
-                                                    @foreach ($dates as $date)
-                                                        <th>{{ \Carbon\Carbon::parse($date['date'])->format('d') }}</th>
-                                                    @endforeach
-                                                    <th>Total Hadir</th>
-                                                    <th>Total Alpa</th>
-                                                    <th>Total Ijin</th>
-                                                    <th>Total Sakit</th>
-                                                    <th>Persentase Kehadiran</th>
-                                                    <th>Point Absensi</th>
-                                                    <th>Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($students as $student)
-                                                    @php
-                                                        $totalHadir = 0;
-                                                        $totalAlpa = 0;
-                                                        $totalIjin = 0;
-                                                        $totalSakit = 0;
-                                                        $totalDays = 0; // Menghitung total hari (tanpa sabtu, minggu, dan hari besar)
-                                                        $datesInMonth = collect($dates)->where('isWeekend', false); // Hanya hari kerja
-                                                        $pointAbsensi = 0;
-                                                    @endphp
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $student->name }}</td>
-                                                        <td>{{ $student->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
-                                                        @foreach ($dates as $date)
-                                                            @php
-                                                                $attendance = $attendances->where('student_id', $student->id)->where('date', $date['date'])->first();
-                                                                if ($attendance) {
-                                                                    switch ($attendance->presence_status) {
-                                                                        case 'Hadir':
-                                                                            $presenceStatus = 'H';
-                                                                            $totalHadir++;
-                                                                            break;
-                                                                        case 'Alpa':
-                                                                            $presenceStatus = 'A';
-                                                                            $totalAlpa++;
-                                                                            $pointAbsensi += 10;
-                                                                            break;
-                                                                        case 'Ijin':
-                                                                            $presenceStatus = 'I';
-                                                                            $totalIjin++;
-                                                                            break;
-                                                                        case 'Sakit':
-                                                                            $presenceStatus = 'S';
-                                                                            $totalSakit++;
-                                                                            break;
-                                                                        default:
-                                                                            $presenceStatus = '-'; // Jika status tidak dikenali
-                                                                            break;
-                                                                    }
-                                                                } else {
-                                                                    $presenceStatus = '-'; // Jika tidak ada data absensi
-                                                                }
-                                                            @endphp
-                                                            <td style="{{ $date['isWeekend'] ? 'background-color: #f8d7da;' : '' }}">
-                                                                {{ $presenceStatus }}
-                                                            </td>
-                                                        @endforeach
-                                                        @php
-                                                            // Menghitung total hari kerja
-                                                            $totalDays = $datesInMonth->count();
-                                                            // Menghitung persentase kehadiran
-                                                            $persentaseKehadiran = $totalDays > 0 ? ($totalHadir / $totalDays) * 100 : 0;
-                                                        @endphp
-                                                        <td>{{ $totalHadir }}</td>
-                                                        <td>{{ $totalAlpa }}</td>
-                                                        <td>{{ $totalIjin }}</td>
-                                                        <td>{{ $totalSakit }}</td>
-                                                        <td>{{ number_format($persentaseKehadiran, 2) }}%</td>
-                                                        <td>{{ $pointAbsensi }}</td>
-                                                        <td>
-                                                            @can('Ubah Absensi')
-                                                            <a href="#" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#edit_data{{ $student->id }}">Edit</a>
-                                                            @endcan
-                                                            @can('Hapus Absensi')
-                                                            <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete_data{{ $student->id }}">Hapus</a>
-                                                            @endcan
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                                @foreach ($students as $student)
-                                                <!-- Modal Edit -->
-                                                <div class="modal fade" id="edit_data{{ $student->id }}" tabindex="-1" aria-labelledby="editLabel{{ $student->id }}" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="editLabel{{ $student->id }}">Edit Absensi Siswa</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <form method="POST" action="{{ route('attendance.update', $student->id) }}">
-                                                                    @csrf
-                                                                    @method('PUT')
-                                                                    
-                                                                    <!-- Form untuk mengubah status kehadiran untuk setiap tanggal -->
-                                                                    <div class="mb-3">
-                                                                        @foreach ($dates as $date)
-                                                                            <label for="presence_status_{{ $date['date'] }}" class="form-label">
-                                                                                Tanggal {{ \Carbon\Carbon::parse($date['date'])->format('d-m-Y') }}
-                                                                            </label>
-                                                                            <div>
-                                                                                <div class="form-check form-check-inline">
-                                                                                    <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Hadir" id="hadir_{{ $student->id }}_{{ $date['date'] }}" 
-                                                                                        {{ $attendances->where('student_id', $student->id)->where('date', $date['date'])->first()?->presence_status == 'Hadir' ? 'checked' : '' }}>
-                                                                                    <label class="form-check-label" for="hadir_{{ $student->id }}_{{ $date['date'] }}">Hadir</label>
-                                                                                </div>
-                                                                                <div class="form-check form-check-inline">
-                                                                                    <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Alpa" id="alpa_{{ $student->id }}_{{ $date['date'] }}" 
-                                                                                        {{ $attendances->where('student_id', $student->id)->where('date', $date['date'])->first()?->presence_status == 'Alpa' ? 'checked' : '' }}>
-                                                                                    <label class="form-check-label" for="alpa_{{ $student->id }}_{{ $date['date'] }}">Alpa</label>
-                                                                                </div>
-                                                                                <div class="form-check form-check-inline">
-                                                                                    <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Ijin" id="ijin_{{ $student->id }}_{{ $date['date'] }}" 
-                                                                                        {{ $attendances->where('student_id', $student->id)->where('date', $date['date'])->first()?->presence_status == 'Ijin' ? 'checked' : '' }}>
-                                                                                    <label class="form-check-label" for="ijin_{{ $student->id }}_{{ $date['date'] }}">Ijin</label>
-                                                                                </div>
-                                                                                <div class="form-check form-check-inline">
-                                                                                    <input class="form-check-input" type="radio" name="presence_status[{{ $date['date'] }}]" value="Sakit" id="sakit_{{ $student->id }}_{{ $date['date'] }}" 
-                                                                                        {{ $attendances->where('student_id', $student->id)->where('date', $date['date'])->first()?->presence_status == 'Sakit' ? 'checked' : '' }}>
-                                                                                    <label class="form-check-label" for="sakit_{{ $student->id }}_{{ $date['date'] }}">Sakit</label>
-                                                                                </div>
-                                                                            </div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                    <input type="hidden" name="user_id" value="{{ Auth::id() }}">
-                                                                    
-                                                                    <input type="hidden" name="month" value="{{ $selectedMonth }}">
-                                                                    <input type="hidden" name="year" value="{{ $selectedYear }}">
-                                                                    <div class="modal-footer">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                                                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                            @foreach ($students as $student)
-                                                <!-- Modal Delete -->
-                                                <div class="modal fade" id="delete_data{{ $student->id }}" tabindex="-1" aria-labelledby="deleteLabel{{ $student->id }}" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="deleteLabel{{ $student->id }}">Hapus Data Absensi</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                Apakah Anda yakin ingin menghapus data absensi siswa <strong>{{ $student->name }}</strong> untuk bulan ini?
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <form method="POST" action="{{ route('attendance.destroy', $student->id) }}">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <input type="hidden" name="month" value="{{ $selectedMonth }}">
-                                                                    <input type="hidden" name="year" value="{{ $selectedYear }}">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
-                                                                    <button type="submit" class="btn btn-danger">Hapus</button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                            </tbody>
-                                            <tfoot>
-                                                @php
-                                                    $totalHadirPerHari = array_fill(0, count($dates), 0);
-                                                    $totalAlpaPerHari = array_fill(0, count($dates), 0);
-                                                    $totalIjinPerHari = array_fill(0, count($dates), 0);
-                                                    $totalSakitPerHari = array_fill(0, count($dates), 0);
-                                                @endphp
-                                                @foreach ($students as $student)
-                                                    @foreach ($dates as $index => $date)
-                                                        @php
-                                                            $attendance = $attendances->where('student_id', $student->id)->where('date', $date['date'])->first();
-                                                            if ($attendance) {
-                                                                switch ($attendance->presence_status) {
-                                                                    case 'Hadir':
-                                                                        $totalHadirPerHari[$index]++;
-                                                                        break;
-                                                                    case 'Alpa':
-                                                                        $totalAlpaPerHari[$index]++;
-                                                                        break;
-                                                                    case 'Ijin':
-                                                                        $totalIjinPerHari[$index]++;
-                                                                        break;
-                                                                    case 'Sakit':
-                                                                        $totalSakitPerHari[$index]++;
-                                                                        break;
-                                                                }
-                                                            }
-                                                        @endphp
-                                                    @endforeach
-                                                @endforeach
-                                                <tr>
-                                                    <td colspan="3"><strong>Total Hadir Per Hari</strong></td>
-                                                    @foreach ($totalHadirPerHari as $totalHadir)
-                                                        <td>{{ $totalHadir }}</td>
-                                                    @endforeach
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td colspan="3"><strong>Total Alpa Per Hari</strong></td>
-                                                    @foreach ($totalAlpaPerHari as $totalAlpa)
-                                                        <td>{{ $totalAlpa }}</td>
-                                                    @endforeach
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td colspan="3"><strong>Total Ijin Per Hari</strong></td>
-                                                    @foreach ($totalIjinPerHari as $totalIjin)
-                                                        <td>{{ $totalIjin }}</td>
-                                                    @endforeach
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td colspan="3"><strong>Total Sakit Per Hari</strong></td>
-                                                    @foreach ($totalSakitPerHari as $totalSakit)
-                                                        <td>{{ $totalSakit }}</td>
-                                                    @endforeach
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td colspan="3"><strong>Persentase Kehadiran</strong></td>
-                                                    @foreach ($totalHadirPerHari as $index => $totalHadir)
-                                                        <td>
-                                                            @php
-                                                                $totalSiswa = $students->count();
-                                                                $persentaseKehadiranHari = $totalSiswa > 0 ? ($totalHadir / $totalSiswa) * 100 : 0;
-                                                            @endphp
-                                                            {{ number_format($persentaseKehadiranHari, 2) }}%
-                                                        </td>
-                                                    @endforeach
-                                                    <td colspan="5">Persentase Kehadiran Bulanan</td>
-                                                    @php
-                                                        $totalStudents = count($students);
-                                                        $totalDaysInMonth = count(array_filter($dates, fn($date) => !$date['isWeekend']));
-                                                        $totalKehadiranBulanan = array_sum($totalHadirPerHari);
-                                                        $persentaseKehadiranBulanan = $totalStudents > 0 && $totalDaysInMonth > 0 ? ($totalKehadiranBulanan / ($totalStudents * $totalDaysInMonth)) * 100 : 0;
-                                                    @endphp
-                                                    <td colspan="{{ count($dates) }}">{{ number_format($persentaseKehadiranBulanan, 2) }}%</td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<div>
+  <div class="content">
+    <div class="row pt-4">
+      <div class="mb-4">
+        <div class="card shadow mb-4">
+
+          {{-- ===== CARD HEADER ===== --}}
+          <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="m-0 text-primary">
+              {{ $isSiswa ? 'Rekap Absensi Saya' : 'Tabel Absensi Siswa' }}
+            </h5>
+
+            @if(!$isSiswa && !$isWaliKelas)
+            <div class="row filter-row">
+              <form method="GET" action="{{ route('attendance.index') }}" class="form-inline" id="filterForm">
+                <div class="col-12 col-sm-6 col-md-3">
+                  <select name="class" class="form-select" onchange="this.form.submit()">
+                    <option value="">Pilih Kelas</option>
+                    @foreach ($classes as $class)
+                      <option value="{{ $class->id }}" {{ $selectedClass == $class->id ? 'selected' : '' }}>
+                        {{ $class->class_level }} {{ $class->major->major_name }} {{ $class->classroom }}
+                      </option>
+                    @endforeach
+                  </select>
                 </div>
+                @if ($view === 'daily')
+                  <div class="col-6 col-sm-4 col-md-3">
+                    <input type="date" id="selectedDate" name="date" class="form-control"
+                      value="{{ request('date', \Carbon\Carbon::today()->format('Y-m-d')) }}">
+                  </div>
+                @endif
+                @if ($view === 'monthly')
+                  <div class="col-6 col-sm-3 col-md-2">
+                    <select name="month" id="selectedMonth" class="form-select">
+                      @foreach (range(1,12) as $m)
+                        <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
+                          {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                        </option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div class="col-6 col-sm-3 col-md-2">
+                    <select name="year" id="selectedYear" class="form-select">
+                      @foreach ($years as $y)
+                        <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                @endif
+                @if ($view === 'semester')
+                  <div class="col-6 col-sm-3 col-md-2">
+                    <select name="year" id="selectedYear" class="form-select">
+                      @foreach ($years as $y)
+                        <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                @endif
+                <input type="hidden" name="view" value="{{ $view }}">
+              </form>
             </div>
+            @endif
+
+            @if($isWaliKelas)
+            <div class="d-flex gap-2 align-items-center">
+              <form method="GET" action="{{ route('attendance.index') }}" class="d-flex gap-2 align-items-center" id="filterFormWK">
+                @if($view === 'daily')
+                  <input type="date" name="date" class="form-control form-control-sm"
+                    value="{{ request('date', \Carbon\Carbon::today()->format('Y-m-d')) }}"
+                    onchange="this.form.submit()">
+                @endif
+                @if($view === 'monthly')
+                  <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach(range(1,12) as $m)
+                      <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
+                        {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                      </option>
+                    @endforeach
+                  </select>
+                  <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach($years as $y)
+                      <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                  </select>
+                @endif
+                @if($view === 'semester')
+                  <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach($years as $y)
+                      <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                  </select>
+                @endif
+                <input type="hidden" name="view" value="{{ $view }}">
+              </form>
+            </div>
+            @endif
+
+            <div class="d-flex align-items-center gap-2">
+              <a href="{{ route('attendance.index', ['view'=>'daily','class'=>$selectedClass,'month'=>$selectedMonth,'year'=>$selectedYear]) }}"
+                class="btn btn-outline-primary btn-sm {{ $view=='daily'?'active':'' }}">Harian</a>
+              <a href="{{ route('attendance.index', ['view'=>'monthly','class'=>$selectedClass,'month'=>$selectedMonth,'year'=>$selectedYear]) }}"
+                class="btn btn-outline-primary btn-sm {{ $view=='monthly'?'active':'' }}">Bulanan</a>
+              <a href="{{ route('attendance.index', ['view'=>'semester','class'=>$selectedClass,'year'=>$selectedYear]) }}"
+                class="btn btn-outline-primary btn-sm {{ $view=='semester'?'active':'' }}">Semester</a>
+              @if ($view == 'semester')
+                <form method="GET" action="{{ route('attendance.index') }}" class="d-inline-block ms-2">
+                  <input type="hidden" name="class" value="{{ $selectedClass }}">
+                  <input type="hidden" name="year" value="{{ $selectedYear }}">
+                  <input type="hidden" name="view" value="semester">
+                  <select name="semester" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                    <option value="ganjil" {{ request('semester','ganjil')=='ganjil'?'selected':'' }}>Semester Ganjil</option>
+                    <option value="genap" {{ request('semester')=='genap'?'selected':'' }}>Semester Genap</option>
+                  </select>
+                </form>
+              @endif
+            </div>
+          </div>
+
+          @if(!$isSiswa && !$isWaliKelas)
+          <div class="px-3 pt-2">
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+              + Tambah Siswa
+            </button>
+          </div>
+          <div class="modal fade" id="addStudentModal" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Tambah Siswa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <form method="POST" action="{{ route('attendance.addStudent') }}">
+                @csrf
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label">Nama Siswa</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  <input type="hidden" name="class_id" value="{{ $selectedClass }}">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                  <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+              </form>
+            </div></div>
+          </div>
+          @endif
+
+          <div class="card-body">
+            <div class="table-responsive">
+
+              {{-- ===== DAILY ===== --}}
+              @if ($view == 'daily')
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th style="width:60px">No</th>
+                    <th>Nama Siswa</th>
+                    <th style="width:160px">Status</th>
+                    <th style="width:100px">Bukti</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @forelse ($students as $i => $student)
+                    @php $att = $attendances->firstWhere('student_id', $student->id); @endphp
+                    <tr class="student-row" data-student-id="{{ $student->id }}">
+                      <td>{{ $i+1 }}</td>
+                      <td class="{{ !$isSiswa ? 'expand-toggle text-primary' : '' }}"
+                          style="{{ !$isSiswa ? 'cursor:pointer;' : '' }}"
+                          title="{{ !$isSiswa ? 'Klik untuk input' : '' }}">
+                        {{ $student->name }}
+                      </td>
+                      <td class="status-cell">{{ $att->presence_status ?? '-' }}</td>
+                      <td class="evidence-preview">
+                        @if($att && $att->evidence)
+                          @php $ext = strtolower(pathinfo($att->evidence, PATHINFO_EXTENSION)); @endphp
+                          @if($ext === 'pdf')
+                            <a href="{{ asset('storage/' . $att->evidence) }}" target="_blank" class="btn btn-sm btn-outline-danger">
+                              <i class="uil uil-file-pdf-alt"></i> PDF
+                            </a>
+                          @else
+                            <img src="{{ asset('storage/' . $att->evidence) }}" alt="Bukti"
+                              data-bs-toggle="modal" data-bs-target="#evidenceModal"
+                              data-src="{{ asset('storage/' . $att->evidence) }}"
+                              style="max-width:60px;max-height:60px;object-fit:cover;border-radius:4px;cursor:pointer;">
+                          @endif
+                        @else
+                          <span class="text-muted small">-</span>
+                        @endif
+                      </td>
+                    </tr>
+
+                    @if(!$isSiswa)
+                    <tr class="expand-row d-none" id="expand-d-{{ $student->id }}">
+                      <td colspan="4" class="hiddenRow">
+                        <div class="expand-box">
+                          <div class="row">
+                            <div class="col-md-8">
+                              <div class="mb-2">
+                                <strong>Tanggal:</strong>
+                                <span>{{ request('date', \Carbon\Carbon::today()->translatedFormat('d F Y')) }}</span>
+                              </div>
+                              <div class="mb-2">
+                                <strong>Pilih Kehadiran:</strong><br>
+                                @foreach(['Hadir','Ijin','Sakit','Alpa'] as $s)
+                                  <label class="me-3">
+                                    <input type="radio" name="status-{{ $student->id }}" value="{{ $s }}"
+                                      {{ ($att && $att->presence_status === $s) ? 'checked' : '' }}> {{ $s }}
+                                  </label>
+                                @endforeach
+                              </div>
+                              <div class="mb-2 d-none" id="ijin-options-{{ $student->id }}">
+                                <strong>Izin melalui:</strong><br>
+                                @foreach(['Surat','Telepon','Datang ke Sekolah','Lainnya'] as $opt)
+                                  <label class="me-2"><input type="radio" name="ijin-{{ $student->id }}" value="{{ $opt }}"> {{ $opt }}</label>
+                                @endforeach
+                              </div>
+                              {{-- Upload bukti — tampil saat Ijin atau Sakit --}}
+                              <div class="mb-2 d-none" id="evidence-upload-{{ $student->id }}">
+                                <strong>Upload Bukti Surat <span class="text-muted small">(opsional, jpg/png/pdf maks 2MB)</span>:</strong><br>
+                                <input type="file" id="evidence-{{ $student->id }}" class="form-control form-control-sm mt-1"
+                                  accept=".jpg,.jpeg,.png,.pdf">
+                                @if($att && $att->evidence)
+                                  <div class="mt-1 text-muted small">
+                                    Bukti sebelumnya:
+                                    @php $ext = strtolower(pathinfo($att->evidence, PATHINFO_EXTENSION)); @endphp
+                                    @if($ext === 'pdf')
+                                      <a href="{{ asset('storage/' . $att->evidence) }}" target="_blank">Lihat PDF</a>
+                                    @else
+                                      <img src="{{ asset('storage/' . $att->evidence) }}" style="max-height:40px;border-radius:3px;">
+                                    @endif
+                                  </div>
+                                @endif
+                              </div>
+                              <div class="mb-2">
+                                <strong>Keterangan (opsional):</strong><br>
+                                <input type="text" id="ket-{{ $student->id }}" class="form-control"
+                                  placeholder="Contoh: ada surat dari orang tua"
+                                  value="{{ $att->description ?? '' }}">
+                              </div>
+                            </div>
+                            <div class="col-md-4 d-flex flex-column justify-content-center align-items-end">
+                              <button type="button" class="btn btn-primary btn-save-sim" data-student-id="{{ $student->id }}">SIMPAN DATA</button>
+                              <button class="btn btn-outline-secondary btn-sm mt-2 btn-close-expand" data-target="#expand-d-{{ $student->id }}">Tutup</button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    @endif
+                  @empty
+                    <tr><td colspan="4" class="text-center py-3 text-muted">Belum ada data absensi</td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+
+              {{-- ===== MONTHLY ===== --}}
+              @elseif ($view == 'monthly')
+              <table class="table table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:60px">No</th>
+                    <th>Nama Siswa</th>
+                    <th>Alpa</th>
+                    <th>Ijin</th>
+                    <th>Sakit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach ($students as $student)
+                    @php
+                      $studentAttendances = $attendances->get($student->id) ?? collect([]);
+                      $alpa  = $studentAttendances->where('presence_status','Alpa')->count();
+                      $ijin  = $studentAttendances->where('presence_status','Ijin')->count();
+                      $sakit = $studentAttendances->where('presence_status','Sakit')->count();
+                    @endphp
+                    <tr class="student-row expand-toggle" data-student-id="{{ $student->id }}" style="cursor:pointer;">
+                      <td>{{ $loop->iteration }}</td>
+                      <td class="text-primary">{{ $student->name }}</td>
+                      <td>{{ $alpa }}</td>
+                      <td>{{ $ijin }}</td>
+                      <td>{{ $sakit }}</td>
+                    </tr>
+                    <tr class="expand-row d-none" id="expand-m-{{ $student->id }}">
+                      <td colspan="5" class="hiddenRow">
+                        <div class="expand-box">
+                          <h6 class="mb-2">Detail Absensi Bulan {{ \Carbon\Carbon::create()->month(intval($selectedMonth))->translatedFormat('F') }} — {{ $student->name }}</h6>
+                          <table class="table table-sm">
+                            <thead><tr><th>Tanggal</th><th>Status</th><th>Keterangan</th><th>Bukti</th></tr></thead>
+                            <tbody>
+                              @php
+                                $detailAbsensi = $attendances->get($student->id, collect([]))
+                                  ->filter(fn($att) => \Carbon\Carbon::parse($att->date)->month == intval($selectedMonth));
+                              @endphp
+                              @forelse($detailAbsensi as $det)
+                                <tr>
+                                  <td>{{ \Carbon\Carbon::parse($det->date)->translatedFormat('d F Y') }}</td>
+                                  <td>{{ $det->presence_status }}</td>
+                                  <td>{{ $det->note ?? $det->description ?? '-' }}</td>
+                                  <td>
+                                    @if($det->evidence)
+                                      @php $ext = strtolower(pathinfo($det->evidence, PATHINFO_EXTENSION)); @endphp
+                                      @if($ext === 'pdf')
+                                        <a href="{{ asset('storage/' . $det->evidence) }}" target="_blank" class="btn btn-sm btn-outline-danger py-0">PDF</a>
+                                      @else
+                                        <img src="{{ asset('storage/' . $det->evidence) }}"
+                                          style="max-width:50px;max-height:50px;object-fit:cover;border-radius:3px;cursor:pointer;"
+                                          data-bs-toggle="modal" data-bs-target="#evidenceModal"
+                                          data-src="{{ asset('storage/' . $det->evidence) }}">
+                                      @endif
+                                    @else
+                                      -
+                                    @endif
+                                  </td>
+                                </tr>
+                              @empty
+                                <tr><td colspan="4" class="text-center">Belum ada data absensi bulan ini</td></tr>
+                              @endforelse
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+
+              {{-- ===== SEMESTER ===== --}}
+              @elseif ($view == 'semester')
+              @php
+                $semester      = request()->input('semester','ganjil');
+                $bulanSemester = $semester === 'ganjil' ? [7,8,9,10,11,12] : [1,2,3,4,5,6];
+              @endphp
+              <table class="table table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th>No</th>
+                    <th>Nama Siswa</th>
+                    @foreach ($bulanSemester as $b)
+                      <th>{{ \Carbon\Carbon::create()->month($b)->translatedFormat('F') }}</th>
+                    @endforeach
+                    <th colspan="3" class="text-center">Jml Absen</th>
+                  </tr>
+                  <tr>
+                    <th></th><th></th>
+                    @foreach ($bulanSemester as $b)<th></th>@endforeach
+                    <th class="text-center">S</th>
+                    <th class="text-center">I</th>
+                    <th class="text-center">A</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach ($students as $student)
+                    @php $totalSakit=0; $totalIjin=0; $totalAlpa=0; @endphp
+                    <tr class="student-row expand-toggle" data-student-id="{{ $student->id }}" style="cursor:pointer;">
+                      <td>{{ $loop->iteration }}</td>
+                      <td class="text-primary">{{ $student->name }}</td>
+                      @foreach ($bulanSemester as $b)
+                        @php
+                          $s = $semesterBreakdown[$student->id][$b]['Sakit'] ?? 0;
+                          $i = $semesterBreakdown[$student->id][$b]['Ijin']  ?? 0;
+                          $a = $semesterBreakdown[$student->id][$b]['Alpa']  ?? 0;
+                          $totalSakit += $s; $totalIjin += $i; $totalAlpa += $a;
+                        @endphp
+                        <td>S:{{ $s }} I:{{ $i }} A:{{ $a }}</td>
+                      @endforeach
+                      <td class="text-center">{{ $totalSakit }}</td>
+                      <td class="text-center">{{ $totalIjin }}</td>
+                      <td class="text-center">{{ $totalAlpa }}</td>
+                    </tr>
+                    <tr class="expand-row d-none" id="expand-s-{{ $student->id }}">
+                      <td colspan="{{ 4 + count($bulanSemester) }}" class="hiddenRow">
+                        <div class="expand-box">
+                          <h6 class="mb-2">Detail Semester {{ ucfirst($semester) }} — {{ $student->name }}</h6>
+                          <table class="table table-sm">
+                            <thead><tr><th>Tanggal</th><th>Status</th><th>Keterangan</th><th>Bukti</th></tr></thead>
+                            <tbody>
+                              @php
+                                $detailAbsensi = $attendances->filter(fn($att) =>
+                                  $att->student_id == $student->id &&
+                                  in_array(\Carbon\Carbon::parse($att->date)->month, $bulanSemester)
+                                );
+                              @endphp
+                              @forelse($detailAbsensi as $det)
+                                <tr>
+                                  <td>{{ \Carbon\Carbon::parse($det->date)->translatedFormat('d F Y') }}</td>
+                                  <td>{{ $det->presence_status }}</td>
+                                  <td>{{ $det->note ?? $det->description ?? '-' }}</td>
+                                  <td>
+                                    @if($det->evidence)
+                                      @php $ext = strtolower(pathinfo($det->evidence, PATHINFO_EXTENSION)); @endphp
+                                      @if($ext === 'pdf')
+                                        <a href="{{ asset('storage/' . $det->evidence) }}" target="_blank" class="btn btn-sm btn-outline-danger py-0">PDF</a>
+                                      @else
+                                        <img src="{{ asset('storage/' . $det->evidence) }}"
+                                          style="max-width:50px;max-height:50px;object-fit:cover;border-radius:3px;cursor:pointer;"
+                                          data-bs-toggle="modal" data-bs-target="#evidenceModal"
+                                          data-src="{{ asset('storage/' . $det->evidence) }}">
+                                      @endif
+                                    @else
+                                      -
+                                    @endif
+                                  </td>
+                                </tr>
+                              @empty
+                                <tr><td colspan="4" class="text-center">Belum ada data</td></tr>
+                              @endforelse
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+              @endif
+
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
+
+{{-- Modal Preview Bukti --}}
+<div class="modal fade" id="evidenceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bukti Surat</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="evidenceModalImg" src="" style="max-width:100%;border-radius:8px;">
+      </div>
+      <div class="modal-footer justify-content-center">
+        <a id="evidenceDownloadBtn" href="#" download
+          class="btn btn-primary">
+          <i class="uil uil-download-alt"></i> Unduh Bukti
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    ['selectedDate','selectedMonth','selectedYear'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => el.closest('form').submit());
+    });
+
+    // Expand/collapse rows
+    document.querySelectorAll('.expand-toggle').forEach(el => {
+        el.addEventListener('click', function () {
+            const tr = this.closest('tr.student-row') || this.closest('tr');
+            if (!tr) return;
+            const studentId = tr.dataset.studentId;
+
+            document.querySelectorAll('.expand-row').forEach(r => {
+                if (!r.id.endsWith('-' + studentId)) r.classList.add('d-none');
+            });
+
+            ['expand-d-','expand-m-','expand-s-'].forEach(prefix => {
+                const row = document.getElementById(prefix + studentId);
+                if (row) {
+                    row.classList.toggle('d-none');
+                    if (prefix === 'expand-d-' && !row.classList.contains('d-none')) {
+                        attachIjinListeners(studentId);
+                    }
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.btn-close-expand').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const el = document.querySelector(this.dataset.target);
+            if (el) el.classList.add('d-none');
+        });
+    });
+
+    // Simpan absensi via AJAX (FormData untuk support file upload)
+    document.querySelectorAll('.btn-save-sim').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const studentId = this.dataset.studentId;
+            const status    = document.querySelector(`input[name="status-${studentId}"]:checked`)?.value;
+            const ijin      = document.querySelector(`input[name="ijin-${studentId}"]:checked`)?.value || '';
+            const ket       = document.getElementById('ket-' + studentId)?.value || '';
+            const fileInput = document.getElementById('evidence-' + studentId);
+
+            if (!status) { alert('Silakan pilih status kehadiran dulu!'); return; }
+
+            const dateInput = document.querySelector('input[name="date"]');
+            const tanggal   = dateInput ? dateInput.value : "{{ request('date') ?? now()->format('Y-m-d') }}";
+
+            const formData = new FormData();
+            formData.append('student_id', studentId);
+            formData.append('presence_status', status);
+            formData.append('izin_via', ijin);
+            formData.append('keterangan', ket);
+            formData.append('date', tanggal);
+            formData.append('_token', '{{ csrf_token() }}');
+            if (fileInput && fileInput.files[0]) {
+                formData.append('evidence', fileInput.files[0]);
+            }
+
+            fetch("{{ route('attendance.store') }}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`.student-row[data-student-id="${studentId}"] .status-cell`).textContent = status;
+                    const expand = document.getElementById('expand-d-' + studentId);
+                    if (expand) expand.classList.add('d-none');
+                    alert('✅ Data berhasil disimpan!');
+                    location.reload(); // reload untuk tampilkan bukti terbaru
+                } else {
+                    alert('❌ Gagal menyimpan data.');
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    });
+
+    // Modal preview gambar
+    document.querySelectorAll('[data-bs-target="#evidenceModal"]').forEach(img => {
+    img.addEventListener('click', function () {
+        const src = this.dataset.src;
+        document.getElementById('evidenceModalImg').src = src;
+        document.getElementById('evidenceDownloadBtn').href = src;
+        });
+    });
+});
+
+function attachIjinListeners(studentId) {
+    document.querySelectorAll(`input[name="status-${studentId}"]`).forEach(r => {
+        r.addEventListener('change', function () {
+            const opsiIjin     = document.getElementById('ijin-options-' + studentId);
+            const opsiEvidence = document.getElementById('evidence-upload-' + studentId);
+
+            if (this.value === 'Ijin') {
+                opsiIjin?.classList.remove('d-none');
+                opsiEvidence?.classList.remove('d-none');
+            } else if (this.value === 'Sakit') {
+                opsiIjin?.classList.add('d-none');
+                opsiEvidence?.classList.remove('d-none');
+                document.querySelectorAll(`input[name="ijin-${studentId}"]`).forEach(s => s.checked = false);
+            } else {
+                opsiIjin?.classList.add('d-none');
+                opsiEvidence?.classList.add('d-none');
+                document.querySelectorAll(`input[name="ijin-${studentId}"]`).forEach(s => s.checked = false);
+            }
+        });
+
+        // Trigger untuk status yang sudah terisi
+        if (r.checked) r.dispatchEvent(new Event('change'));
+    });
+}
+</script>
+@endpush
 @endsection
