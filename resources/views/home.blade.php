@@ -19,7 +19,7 @@
                     </h3>
                     <p class="mt-2 m-0" style="line-height: 1.625;">Semoga harimu menyenangkan di tempat kerja</p>
                     <p>Kelola data sesi bimbingan Anda!</p>
-    
+
                     <button class="btn mt-3 text-white">
                       Lihat data
                     </button>
