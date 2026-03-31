@@ -11,9 +11,6 @@
               <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#AddAchievementModal">
                 Tambah
               </button>
-              <a href="{{ route('achievement.export') }}" class="btn btn-success">
-                Ekspor
-              </a>
               @endcan
               <div class="modal fade" id="AddAchievementModal" tabindex="-1" aria-labelledby="AddAchievementModalLabel"
                 aria-hidden="true">
@@ -129,31 +126,32 @@
                               <td>{{ $achievement->date }}</td>
                               <td>{{ $achievement->recognition }}</td>
                               <td>
-                                @if ($achievement->certificate)
-                                  @php
-                                    $fileType = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $achievement->certificate);
-                                  @endphp
-                                  @if ($fileType === 'application/pdf')
-                                    <i class="uil uil-file-alt" style="font-size: 50px; color: red; margin-bottom: 10px;"></i>
-                                  @else
-                                    <img src="{{ route('achievement.showImage', $achievement->id) }}" alt="Sertifikat" style="max-width: 100px; max-height: 100px; margin-bottom: 10px;">
-                                  @endif
-                                  <a href="{{ route('achievement.download', $achievement->id) }}" class="btn btn-primary btn-sm">
-                                    <i class="uil uil-download-alt"></i> Unduh
-                                  </a>
+                                @if($achievement->certificate)
+                                    @php $ext = strtolower(pathinfo($achievement->certificate, PATHINFO_EXTENSION)); @endphp
+                                    @if($ext === 'pdf')
+                                        <a href="{{ asset('storage/' . $achievement->certificate) }}" target="_blank" class="btn btn-info btn-sm">
+                                            <i class="uil uil-file-alt me-1"></i> Lihat PDF
+                                        </a>
+                                    @else
+                                        <img src="{{ asset('storage/' . $achievement->certificate) }}"
+                                            alt="Sertifikat"
+                                            style="max-height:80px;border-radius:5px;cursor:zoom-in;"
+                                            onclick="showFullscreen('{{ asset('storage/' . $achievement->certificate) }}')"
+                                            title="Klik untuk lihat penuh">
+                                    @endif
                                 @else
-                                  Tidak ada bukti
+                                    <span class="text-muted">Tidak ada bukti</span>
                                 @endif
-                              </td>
-                              <td>{{ $achievement->description }}</td>
-                              <td>
+                            </td>
+                            <td>{{ $achievement->description }}</td>
+                            <td>
                                 @can('Ubah Prestasi')
                                 <a href="#" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                  data-bs-target="#edit_data{{ $achievement->id }}">Edit</a>
+                                    data-bs-target="#edit_data{{ $achievement->id }}">Edit</a>
                                 @endcan
                                 @can('Hapus Prestasi')
                                 <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                  data-bs-target="#delete_data{{ $achievement->id }}">Hapus</a>
+                                    data-bs-target="#delete_data{{ $achievement->id }}">Hapus</a>
                                 @endcan
 
                                 <!-- Edit Modal -->
@@ -250,8 +248,6 @@
                                             <label for="description" class="col-form-label">Deskripsi</label>
                                             <textarea type="text" class="form-control" id="description" name="description">{{ $achievement->description }}</textarea>
                                           </div>
-                                          <!-- Add more fields as needed -->
-
                                         </div>
                                         <div class="modal-footer">
                                           <button type="button" class="btn btn-secondary"
@@ -292,7 +288,7 @@
                               </td>
                           @endforeach
                         </tbody>
-                        <tfoot>
+                        {{-- <tfoot>
                           <tr>
                             <th>No</th>
                             <th>Nama</th>
@@ -306,7 +302,7 @@
                             <th>Deskripsi</th>
                             <th>Aksi</th>
                           </tr>
-                        </tfoot>
+                        </tfoot> --}}
                       </table>
                     </div>
                   </div>
