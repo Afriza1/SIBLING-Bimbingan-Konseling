@@ -26,7 +26,7 @@
                             <th>No</th>
                             <th>Foto</th>
                             <th>Nama</th>
-                            <th>NIP/NIS</th>
+                            <th>NIP/NISN</th>
                             <th>Jenis Kelamin</th>
                             <th>Tempat Lahir</th>
                             <th>Tanggal Lahir</th>
@@ -224,7 +224,7 @@
                               </td>
                           @endforeach
                         </tbody>
-                        <tfoot>
+                        {{-- <tfoot>
                           <tr>
                             <th>No</th>
                             <th>Foto</th>
@@ -239,7 +239,7 @@
                             <th>Email</th>
                             <th>Aksi</th>
                           </tr>
-                        </tfoot>
+                        </tfoot> --}}
                       </table>
                     </div>
                   </div>
@@ -256,12 +256,12 @@
   var loadFile = function(event) {
     var output = document.getElementById('output');
     output.src = URL.createObjectURL(event.target.files[0]);
-    
+
   }
   var loadFileUpdate = function(event) {
     var outputUpdate = document.getElementById('outputUpdate');
     outputUpdate.src = URL.createObjectURL(event.target.files[0]);
-    
+
   }
 </script>
 
