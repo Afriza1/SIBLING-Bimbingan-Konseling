@@ -1,63 +1,82 @@
-<div class="home-navbar sticky-top" id="sticky-element">
-  <nav class="navbar-custom navbar-expand-md shadowNavbar">
-    <div class="container-fluid d-flex align-items-center">
-      <div class="menu" id="menu"><i class="bx bx-menu menu-collapse"></i></div>
-      <div class="collapse navbar-collapse justify-content-end " id="navbarSupportedContent">
-        <ul class="navbar-nav mb-lg-0">
-          <li class="nav-item d-flex align-items-center">
-            <div class="time-frame me-3">
-              <div id="date-part"></div>
-              <div id="time-part"></div>
-            </div>
-            <span class="seperatorVertikal me-3"></span>
-            <div class="nav__btns">
-              <i class="uil uil-moon change-theme" id="theme-button"></i>
-            </div>
-          </li>
-          <li class="nav-item dropdown frameProfile">
-            <a class="nav-link dropdown-toggle nav-user" href="/#" id="navbarDropdown" role="button"
-              data-bs-toggle="dropdown" aria-expanded="false">
-              <span class="account-user-avatar d-inline-block">
-                @if (auth()->user()->photo)
-                  <img src="{{ route('user.showImage', auth()->user()->id) }}" alt="profileImg" class="cust-avatar img-fluid rounded-circle"/>
-                @else
-                  <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=random" class="cust-avatar img-fluid rounded-circle" />
-                @endif
-              </span>
-              <span class="account-user-name" id="profileName">{{ auth()->user()->name }}</span>
-              <span class="account-position">{{ auth()->user()->getRoleNames()->first() ?? 'Tidak Ada Role' }}</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end me-1 border border-0 custom-rounded"
-              aria-labelledby="navbarDropdown" style="">
-              <li>
-                <a class="text-decoration-none" href="/settings">
-                  <div class="dropdown-item custom-item-dropdown d-flex align-items-center">
-                    <i class="uil uil-user me-2"></i>
-                    <span class="nameItem">My Profile</span>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a class="text-decoration-none" href="/">
-                  <div class="dropdown-item custom-item-dropdown d-flex align-items-center">
-                    <i class="uil uil-estate me-2"></i>
-                    <span class="nameItem">Landing</span>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item custom-item-dropdown d-flex align-items-center" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                  <i class="uil uil-sign-out-alt me-2"></i>
-                  <span class="nameItem">Sign Out</span>
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                  @csrf
-                </form>
-              </li>
-            </ul>
-          </li>
-        </ul>
+<div class="app-topbar">
+
+  {{-- Toggle sidebar --}}
+  <div class="topbar-toggle" id="sidebarToggle">
+    <i class="bx bx-menu"></i>
+  </div>
+
+  {{-- Page title --}}
+  <div class="topbar-title">
+    <h5>
+      @if($active === 'home') Beranda
+      @elseif($active === 'student') Data Siswa
+      @elseif($active === 'user') Data User
+      @elseif($active === 'major') Jurusan
+      @elseif($active === 'class') Kelas
+      @elseif($active === 'role') Role
+      @elseif($active === 'status') Status
+      @elseif($active === 'assessment') Asesmen
+      @elseif($active === 'guidance_booking') Booking Bimbingan
+      @elseif($active === 'guidance') Bimbingan
+      @elseif($active === 'case') Kasus
+      @elseif($active === 'attendance') Rekap Absensi
+      @elseif($active === 'job_vacancy') Karir
+      @elseif($active === 'achievement') Prestasi
+      @elseif($active === 'student_assessment') Asesmen Siswa
+      @elseif($active === 'autentifikasi') Autentifikasi
+      @elseif($active === 'permission') Permission
+      @elseif($active === 'settings') Pengaturan
+      @else Dashboard
+      @endif
+    </h5>
+    <small>SMKN 7 Negeri Jember</small>
+  </div>
+
+  {{-- Right side --}}
+  <div class="topbar-right">
+
+    {{-- Datetime --}}
+    <div class="topbar-datetime">
+      <span id="topbar-date"></span>
+      <span id="topbar-time"></span>
+    </div>
+
+    <div class="topbar-divider"></div>
+
+    {{-- Dark mode toggle --}}
+    <div class="topbar-theme" id="themeToggle" title="Ganti tema">
+      <i class="uil uil-moon"></i>
+    </div>
+
+    {{-- Profile dropdown --}}
+    <div class="topbar-profile" id="topbarProfile" style="position:relative;">
+      @if(auth()->user()->photo)
+        <img src="{{ route('user.showImage', auth()->user()->id) }}" alt="foto">
+      @else
+        <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=random" alt="foto">
+      @endif
+      <div class="topbar-profile-info">
+        <span class="topbar-profile-name">{{ Str::limit(auth()->user()->name, 16) }}</span>
+        <span class="topbar-profile-role">{{ auth()->user()->getRoleNames()->first() ?? 'Tidak Ada Role' }}</span>
+      </div>
+      <i class="uil uil-angle-down topbar-profile-arrow"></i>
+
+      {{-- Dropdown menu --}}
+      <div class="topbar-dropdown" id="topbarDropdown">
+        <a href="/settings">
+          <i class="uil uil-user"></i> My Profile
+        </a>
+        <a href="/">
+          <i class="uil uil-estate"></i> Landing Page
+        </a>
+        <hr>
+        <a href="{{ route('logout') }}" class="danger"
+          onclick="event.preventDefault(); document.getElementById('topbar-logout').submit();">
+          <i class="uil uil-sign-out-alt"></i> Sign Out
+        </a>
+        <form id="topbar-logout" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
       </div>
     </div>
-  </nav>
+
+  </div>
 </div>
