@@ -41,7 +41,7 @@
                         </div>
                       </div>
                     </div>
-                  </div> 
+                  </div>
                   <div class="card mt-4" style="border-radius: 16px; border-color: #e2e2e4; background-color: var(--container-color)">
                     <div class="card-body">
                       <h5 class="card-title" style="font-family: NunitoSans-Bold ">Data Personal</h5>
@@ -62,8 +62,13 @@
                           </div>
                           <div class="col-md-6">
                             <div class="mb-3">
-                              <label for="nip" class="col-form-label">NIP/NUPTK</label>
-                              <input type="text" class="form-control" id="nip" name="nip" value="{{ auth()->user()->nip }}">
+                              @php $isSiswaRole = auth()->user()->hasRole('Siswa'); @endphp
+                                <label for="nip" class="col-form-label">
+                                {{ $isSiswaRole ? 'NISN' : 'NIP/NUPTK' }}
+                                </label>
+                                <input type="text" class="form-control" id="nip" name="nomor_induk"
+                                value="{{ auth()->user()->nomor_induk }}"
+                                placeholder="{{ $isSiswaRole ? 'Masukkan NISN' : 'Masukkan NIP atau NUPTK' }}">
                             </div>
                             <div class="mb-3">
                               <label for="name" class="col-form-label">Nama:</label>
@@ -124,23 +129,23 @@
               <div class="card border-0 shadowNavbar">
                 <div class="card-body">
                   <h5 class="card-title">Keamanan</h5>
-                  <form action="" method="POST">
+                  <form action="{{ route('password.update') }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="mb-3">
-                      <label for="current_password" class="form-label">Password Saat Ini</label>
-                      <input type="password" class="form-control" id="current_password" name="current_password">
+                        <label for="current_password" class="form-label">Password Saat Ini</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password">
                     </div>
                     <div class="mb-3">
-                      <label for="password" class="form-label">Password Baru</label>
-                      <input type="password" class="form-control" id="password" name="password">
+                        <label for="password" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="password" name="password">
                     </div>
                     <div class="mb-3">
-                      <label for="password_confirmation" class="form-label">Konfirmasi Password Baru</label>
-                      <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
+                        <label for="password_confirmation" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
                     </div>
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                  </form>
+                </form>
                 </div>
               </div>
             </div>
@@ -184,6 +189,6 @@
   var loadFileUpdate = function(event) {
     var outputUpdate = document.getElementById('outputUpdate');
     outputUpdate.src = URL.createObjectURL(event.target.files[0]);
-    
+
   }
 </script>
