@@ -16,46 +16,49 @@
             <form method="POST" action="{{ route('login') }}" id="formLogin" class="mt-4">
               @csrf
               <h2>Login</h2>
+
               @if ($errors->any())
                 <script>
                   document.addEventListener("DOMContentLoaded", function() {
-                    let errorMessage = "{{ $errors->has('email') ? 'Silakan hubungi administrator untuk didaftarkan.' : 'Masukkan Kata Sandi Dengan Benar.' }}";
                     Swal.fire({
                       icon: 'error',
-                      title: '{{ $errors->first() }}',
-                      text: errorMessage,
+                      title: 'Login Gagal',
+                      text: '{{ $errors->first() }}',
                     });
                   });
                 </script>
               @endif
+
               <div>
-                <label>Email</label>
-                <input id="email" type="email" placeholder="example@gmail.com" name="email"
-                  value="{{ old('email') }}" required autocomplete="email" autofocus></input>
+                <label>NISN/NIP</label>
+                <input id="nomor_induk" type="text" placeholder="Masukkan NISN atau NIP"
+                  name="nomor_induk" value="{{ old('nomor_induk') }}"
+                  required autocomplete="nomor_induk" autofocus>
               </div>
-              <div class="wrapper">
+
+              <div class="wrapper mt-3">
                 <label class="f-12 font2" for="passInput">Kata Sandi</label>
-                <input id="passInput" type="password" name="password" placeholder="password" required
-                  autocomplete="current-password">
+                <input id="passInput" type="password" name="password"
+                  placeholder="Masukkan kata sandi" required autocomplete="current-password">
                 <span class="eye" id="spanEye">
                   <i class="uil uil-eye-slash show-hide" toggle="#passInput" id="iconShowHide"></i>
                 </span>
               </div>
+
               @if (Route::has('password.request'))
                 <div class="forgotPassword d-flex justify-content-end">
-                  <a href="{{ route('password.request') }}">Lupa
-                    Password ?</a>
+                  <a href="{{ route('password.request') }}">Lupa Password?</a>
                 </div>
               @endif
-              <button type="submit" class="btn btn-primary w-100" id="btnSubmit">
+
+              <button type="submit" class="btn btn-primary w-100 mt-3" id="btnSubmit">
                 <span class="text_btn">Masuk</span>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
-                  style="display: none;"></span>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
               </button>
             </form>
+
             <div>
               <p class="text-center mt-4 small">Belum punya akun? <a href="{{ route('register') }}">Daftar</a></p>
-              {{-- <p class="text-center mt-4 small">Kembali ke landing page? <a href="/">Landing</a></p> --}}
             </div>
           </div>
         </div>
